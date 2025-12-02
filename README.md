@@ -15,17 +15,17 @@ A execução deve seguir a **ordem obrigatória**:
 
 ### 1️ Iniciar o Gateway (servidor RMI principal)
 ```bash
-java -cp "target/classes;.;target/lib/jsoup-1.21.2.jar" search.GatewayImp
+java -cp "target/classes;.;lib/jsoup-1.21.2.jar" search.GatewayImp
 ```
 
 ### 2️ Iniciar um ou mais Storage Barrels
 ```bash
-java -cp "target/classes;.;target/lib/jsoup-1.21.2.jar" search.MainStorageBarrel
+java -cp "target/classes;.;lib/jsoup-1.21.2.jar" search.MainStorageBarrel
 ```
 
 ### 3️ Iniciar Crawler(s)
 ```bash
-java -cp "target/classes;.;target/lib/jsoup-1.21.2.jar" search.Crawler https://example.com Crawler1
+java -cp "target/classes;.;lib/jsoup-1.21.2.jar" search.Crawler https://example.com Crawler1
 ```
 > Argumentos:  
 > `arg[0]` = URL inicial  
@@ -33,7 +33,7 @@ java -cp "target/classes;.;target/lib/jsoup-1.21.2.jar" search.Crawler https://e
 
 ### 4️ Iniciar Cliente(s)
 ```bash
-java -cp "target/classes;.;target/lib/jsoup-1.21.2.jar" search.ClientImp
+java -cp "target/classes;.;lib/jsoup-1.21.2.jar" search.ClientImp
 ```
 
 ---
