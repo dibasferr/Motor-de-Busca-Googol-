@@ -1,0 +1,203 @@
+package web;
+
+import io.github.ollama4j.Ollama;
+import io.github.ollama4j.models.chat.OllamaChatMessageRole;
+import io.github.ollama4j.models.chat.OllamaChatRequest;
+import io.github.ollama4j.models.chat.OllamaChatResult;
+
+import search.PageInfo;
+import search.WebInterface;
+
+import web.SearchForm;
+
+import search.GatewayInterface;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
+
+import javax.annotation.Resource;
+
+import org.springframework.ui.Model;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+
+
+@Controller
+public class GreetingController implements WebInterface {
+	public Map<String, List<String>> statistics ;
+	/////////////////////////////////////SETUP///////////////////////////////////////////////////////////////
+	
+	@Resource(name = "applicationScopedGatewayGenerator")
+	private GatewayInterface gateway_stub;
+
+
+	public GreetingController(){
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	}
+
+
+	@Override
+	@SendTo("/topic/messages")
+	public void update(Map<String, List<String>> info) {
+		statistics= info;
+		System.out.println("Message received ");
+		new Message(info);
+	}
+
+
+	//Para a implementacao do chat completion, foram usadas as informações disponíveis nesta pagina oficial : https://ollama4j.github.io/ollama4j/apis-generate/chat
+	public String Completion(String wordToLook){
+		try{
+			Ollama ollama = new Ollama("http://localhost:11434/");
+			ollama.setRequestTimeoutSeconds(120);
+			
+			String model = "mistral:7b";
+			ollama.pullModel(model);
+
+			OllamaChatRequest builder = OllamaChatRequest.builder().withModel(model);
+
+			// create first user question
+			OllamaChatRequest requestModel =
+					builder.withMessage(OllamaChatMessageRole.USER, wordToLook)
+ 
+							.build();
+
+			// start conversation with model
+			OllamaChatResult chatResult = ollama.chat(requestModel, null);
+
+			return  chatResult.getResponseModel().getMessage().getResponse();
+
+		}catch(Exception e){
+			System.out.println("Erro ao comunicar com o Ollama server");
+			e.printStackTrace();
+		}
+        return null;
+    }
+
+
+	public boolean isValidURL(String wordToIndex) {
+		try {
+			URI uri = new URI(wordToIndex);
+			// Verifica se tem esquema (http/https)
+			if (uri.getScheme() == null) {
+				return false;
+			}
+			return true;
+		} catch (URISyntaxException e) {
+			return false;
+		}
+	}
+
+
+    @GetMapping("/")
+    public String redirect() {
+        return "index";
+    }
+
+
+	@GetMapping("/goToSearch")
+	public String goToSearch(Model model, @RequestParam(defaultValue = "false") boolean wichOne) {
+		model.addAttribute("searchForm", new SearchForm());
+		if (wichOne) return "indexURL";
+		else return "Search";
+	}
+
+
+	//Se for introduzida uma URL, faz-se a pesquisa das URLs ligadas a essa
+	@GetMapping("/Search")
+	public String Search(@ModelAttribute SearchForm searchForm, Model model) {
+		
+		String wordToLook= searchForm.getWord();
+		
+		if(isValidURL(wordToLook)){ //a pesquisa de urls ligado a uma url também é feita pelo endpoint /Search
+
+			try{
+
+				List<String> result = gateway_stub.pesquisa_URL(wordToLook);
+				model.addAttribute("resultado", result);
+				
+			}catch(Exception e){
+				System.out.println("erro ao comunicar com a gateway. URl nao pesquisado");
+				e.printStackTrace();
+			}
+			return "URLSearchResults.html";
+		}
+		else{
+			try {
+
+				GreetingController obj = new GreetingController();
+				// Supondo que Completion retorna String
+				Callable<String> tarefa = () -> obj.Completion(wordToLook);
+
+				// Cria um executor para gerenciar threads
+				ExecutorService executor = Executors.newSingleThreadExecutor();
+
+				// Submete a tarefa e obtém um Future
+				Future<String> futureResult = executor.submit(tarefa);
+
+				// Executa outras coisas enquanto a thread trabalha
+				List<PageInfo> result = gateway_stub.pesquisa_word(wordToLook);
+
+				model.addAttribute("resultado", result);
+				// Para pegar o resultado da thread (bloqueia até terminar)
+				
+				try {
+					
+					String completionResult = futureResult.get(); 
+					System.out.println(completionResult);
+					model.addAttribute("resultadoCompletion", completionResult);
+				} catch (InterruptedException e) {
+					System.out.println("Problema com a thread de execução do Ollama");
+				}catch (ExecutionException e) {
+					System.out.println("Problema com a thread de execução do Ollama");
+				}
+
+				// Encerra o executor
+				executor.shutdown();
+								
+				String confirmation= searchForm.getIndexHackerNews();
+
+				if(confirmation.equals("yes")){
+					//Codigo para index URLs de top Stories de HackerNews que contenham os termos da variavel "wordToLook"
+				
+				}
+
+			} catch (Exception e) {
+				System.out.println("Erro a comunicar com a gateway. Frase nao pesquisada");
+				e.printStackTrace();
+			}
+		}
+
+		return "SearchResults";
+	}
+
+
+	@GetMapping("/indexUrl")
+	public String indexUrl(@ModelAttribute SearchForm searchForm, Model model) {
+
+		String wordToIndex= searchForm.getWord();
+
+		if(isValidURL(wordToIndex)){
+			try {
+			gateway_stub.addURL(wordToIndex);
+			System.out.println("URL indexed");
+			} catch (Exception e) {
+				System.out.println("Erro a comunicar com a gateway");
+			}
+			return "index";
+		}
+		else{
+			searchForm.setVarTypeError(true); //passa-se o ultimo parametro para gerar
+																												//um allert na view
+			return "indexURL";
+		}
+
+	}
+}
