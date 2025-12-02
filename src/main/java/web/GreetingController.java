@@ -1,14 +1,12 @@
 package web;
 
+
 import io.github.ollama4j.Ollama;
 import io.github.ollama4j.models.chat.OllamaChatMessageRole;
 import io.github.ollama4j.models.chat.OllamaChatRequest;
 import io.github.ollama4j.models.chat.OllamaChatResult;
 
 import search.PageInfo;
-import search.WebInterface;
-
-import web.SearchForm;
 
 import search.GatewayInterface;
 
@@ -18,10 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.springframework.ui.Model;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,29 +28,38 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @Controller
-public class GreetingController implements WebInterface {
+public class GreetingController {
 	public Map<String, List<String>> statistics ;
 	/////////////////////////////////////SETUP///////////////////////////////////////////////////////////////
 	
+	@Autowired
+	WebInterfaceImp conector;
+
 	@Resource(name = "applicationScopedGatewayGenerator")
 	private GatewayInterface gateway_stub;
 
 
-	public GreetingController(){
 
+	public GreetingController(){
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	}
 
 
-	@Override
-	@SendTo("/topic/messages")
-	public void update(Map<String, List<String>> info) {
-		statistics= info;
-		System.out.println("Message received ");
-		new Message(info);
-	}
+    @PostConstruct
+    public void setupSubscription() {
+				
+        // Obtenha o bean do controller (injete-o ou crie-o, se não for um bean
+        
+        try {
+            // A ação de subscrição é executada uma vez
+            gateway_stub.subscribe(conector);
+			System.out.println("Controller subscrito com sucesso");
+        } catch (Exception e) {
+            System.err.println("Erro a fazer subscrição Controller -> Gateway: " + e.getMessage());
+        }
+    }
 
-
+	
 	//Para a implementacao do chat completion, foram usadas as informações disponíveis nesta pagina oficial : https://ollama4j.github.io/ollama4j/apis-generate/chat
 	public String Completion(String wordToLook){
 		try{
@@ -123,6 +131,8 @@ public class GreetingController implements WebInterface {
 				List<String> result = gateway_stub.pesquisa_URL(wordToLook);
 				model.addAttribute("resultado", result);
 				
+				
+
 			}catch(Exception e){
 				System.out.println("erro ao comunicar com a gateway. URl nao pesquisado");
 				e.printStackTrace();
@@ -165,7 +175,10 @@ public class GreetingController implements WebInterface {
 				String confirmation= searchForm.getIndexHackerNews();
 
 				if(confirmation.equals("yes")){
+
+
 					//Codigo para index URLs de top Stories de HackerNews que contenham os termos da variavel "wordToLook"
+				
 				
 				}
 

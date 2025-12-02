@@ -1,5 +1,4 @@
 package search;
-
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,7 +31,7 @@ import java.rmi.registry.LocateRegistry;
  * 
  * @author Pedro Ferreira, Lorando Ca
  * @see StorageBarrelInterface
- * @see ClientInterface
+ * @see Client_interface
  */
 
 public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
@@ -58,7 +57,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     /**
      * Lista de clientes subscritos para callback de estatísticas.
      * <p>
-     * Cada elemento é uma referência remota a {@link ClientInterface}.
+     * Cada elemento é uma referência remota a {@link Client_interface}.
      */
     List<ClientInterface> clients= new ArrayList<>();//do callback to all the stored references
 
@@ -287,6 +286,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         var.put("topTen", topTen);
         List<String> exectime= new ArrayList<>();
         exectime.add(String.valueOf(exectime));
+        var.put("execTime", exectime);
         try {
             web.update(var);
         } catch (Exception e) {
@@ -447,8 +447,5 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         // TODO Auto-generated method stub
         return barrels;
     }
-
-    
-
 
 }
