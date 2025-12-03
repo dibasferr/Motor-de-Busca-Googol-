@@ -273,12 +273,12 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     }
 
 
-    public void updateWeb(List<String> topTen, List<String> barrels, double execTime){
+    public void updateWeb(List<String> topTen, List<String> barrels, double Time){
         Map<String, List<String>> var = new HashMap<>();
         var.put("barrels", barrels);
         var.put("topTen", topTen);
         List<String> exectime= new ArrayList<>();
-        exectime.add(String.valueOf(exectime));
+        exectime.add(String.valueOf(Time));
         var.put("execTime", exectime);
         try {
             web.update(var);
@@ -371,7 +371,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         }
         
         var.put("execTime", exectime);
-
         return var;
     }
 
