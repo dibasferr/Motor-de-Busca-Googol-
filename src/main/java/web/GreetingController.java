@@ -68,20 +68,30 @@ public class GreetingController {
 			ollama.setRequestTimeoutSeconds(120);
 			
 			String model = "mistral:7b";
-			ollama.pullModel(model);
+			//ollama.pullModel(model);
 
-			OllamaChatRequest builder = OllamaChatRequest.builder().withModel(model);
+			//OllamaChatRequest builder = OllamaChatRequest.builder().withModel(model);
 
 			// create first user question
-			OllamaChatRequest requestModel =
-					builder.withMessage(OllamaChatMessageRole.USER, wordToLook)
- 
-							.build();
+			//OllamaChatRequest requestModel =
+					//builder.withMessage(OllamaChatMessageRole.USER, wordToLook)
+							//.build();
 
 			// start conversation with model
-			OllamaChatResult chatResult = ollama.chat(requestModel, null);
+			//OllamaChatResult chatResult = ollama.chat(requestModel, null);
 
-			return  chatResult.getResponseModel().getMessage().getResponse();
+			//return  chatResult.getResponseModel().getMessage().getResponse();
+
+			OllamaChatRequest request = OllamaChatRequest.builder()
+				.withModel(model)
+				.withMessage(OllamaChatMessageRole.USER, wordToLook)
+				.build();
+
+			OllamaChatResult result = ollama.chat(request, null);
+			if (result == null || result.getResponseModel() == null || result.getResponseModel().getMessage() == null) {
+				return null;
+			}
+			return result.getResponseModel().getMessage().getResponse();
 
 		}catch(Exception e){
 			System.out.println("Erro ao comunicar com o Ollama server");
@@ -94,11 +104,10 @@ public class GreetingController {
 	public boolean isValidURL(String wordToIndex) {
 		try {
 			URI uri = new URI(wordToIndex);
+			String scheme = uri.getScheme();
 			// Verifica se tem esquema (http/https)
-			if (uri.getScheme() == null) {
-				return false;
-			}
-			return true;
+			if (scheme == null) return false;
+			return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
 		} catch (URISyntaxException e) {
 			return false;
 		}

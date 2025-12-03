@@ -112,8 +112,19 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             
             gateway= (GatewayInterface)Naming.lookup(String.format("rmi://%s:%s/Gateway",endereço,porta));
             
-            StorageBarrelInterface S= gateway.getBarrel();
-            if(S!= null) index= S.reboot();
+            System.out.println("A pedir barrel ao gateway...");
+            StorageBarrelInterface S = gateway.getBarrel();
+            System.out.println("Recebi do gateway: " + S);
+            
+            if (S != null) {
+                BarrelSnapshot snap = S.reboot();
+                this.index = snap.index;
+                this.linkPages = snap.linkPages;
+                this.urlPopularity = snap.urlPopularity;
+                this.pageInfo = snap.pageInfo;
+                this.last_sender = snap.last_sender;
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -454,8 +465,14 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      *           também {@code linkPages}, {@code urlPopularity} e {@code pageInfo}.
      */
     @Override
-    public Map<String, Set<String>> reboot() throws RemoteException {
-        return index;
+    public BarrelSnapshot reboot() throws RemoteException {
+        BarrelSnapshot snap = new BarrelSnapshot();
+        snap.index = this.index;
+        snap.linkPages = this.linkPages;
+        snap.urlPopularity = this.urlPopularity;
+        snap.pageInfo = this.pageInfo;
+        snap.last_sender = this.last_sender;
+        return snap;
     }
 
     /**

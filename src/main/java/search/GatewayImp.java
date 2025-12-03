@@ -37,9 +37,6 @@ import java.rmi.registry.LocateRegistry;
 public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     WebInterface web = null;
 
-
-
-
     /**
      * Fila de URLs a processar por Crawlers.
      * <p>
@@ -200,6 +197,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
                 System.out.println("Barrel desconectado. Tentando outro...");
                 barrels.remove(prev_barrel);
+                barrelsNames.remove(barrel_counter);
                 barrel= barrels.get(0);// se ha menos um barrel, so um existe
                 prev_barrel=0;
                 continue;
@@ -220,7 +218,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
         searchFreq.put(word, searchFreq.getOrDefault(word, 0) + 1);
 
-        
         //Atualizacao apos alteracao
         //Ordenar pelo valor (de menor para maior) ChatGPT
         searchFreq = searchFreq.entrySet()
@@ -251,8 +248,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     public void collback() {
         List<String> listaPesq = new ArrayList<>(searchFreq.keySet());
 
-
-
         Iterator<ClientInterface> it = clients.iterator(); //Para q a alteracao da lista nao afete a iteracao sobre ela
 
         while (it.hasNext()) {
@@ -260,8 +255,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
             try {
                 ((ClientInterface)client).updateStatistics(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
                                                             getBarrelsNames(), somaTempoExecucao/countPesquisas);
-
-
 
                 updateWeb(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
                 getBarrelsNames(), somaTempoExecucao/countPesquisas);
@@ -362,7 +355,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     }
 
 
-
     @Override
     public Map<String, List<String>> subscribe(WebInterface c) throws RemoteException {
         
@@ -382,7 +374,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
         return var;
     }
-
 
 
     /**
