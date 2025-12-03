@@ -1,6 +1,7 @@
 package search;
 
 import java.util.List;
+import java.util.Map;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -22,7 +23,7 @@ public interface GatewayInterface extends Remote {
 
     public String subscribe(StorageBarrelInterface c) throws RemoteException;
 
-    public void subscribe(WebInterface c) throws RemoteException;
+    public Map<String, List<String>> subscribe(WebInterface c) throws RemoteException;
     
     public  void collback() throws RemoteException; 
 

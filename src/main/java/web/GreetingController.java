@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
+
 @Controller
 public class GreetingController {
 	public Map<String, List<String>> statistics ;
@@ -52,7 +53,7 @@ public class GreetingController {
         
         try {
             // A ação de subscrição é executada uma vez
-            gateway_stub.subscribe(conector);
+            conector.statistics= gateway_stub.subscribe(conector);
 			System.out.println("Controller subscrito com sucesso");
         } catch (Exception e) {
             System.err.println("Erro a fazer subscrição Controller -> Gateway: " + e.getMessage());
@@ -105,8 +106,9 @@ public class GreetingController {
 
 
     @GetMapping("/")
-    public String redirect() {
-        return "index";
+    public String redirect(Model model) {
+        model.addAttribute("initialStatus",conector.statistics);
+		return "index" ;
     }
 
 

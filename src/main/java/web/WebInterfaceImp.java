@@ -13,8 +13,8 @@ import search.WebInterface;
 
 @Component
 public class WebInterfaceImp extends UnicastRemoteObject implements WebInterface{
-    private final SimpMessagingTemplate messagingTemplate;
-    private Map<String, List<String>> statistics;
+    public SimpMessagingTemplate messagingTemplate;
+    public Map<String, List<String>> statistics;
 
     @Autowired
     public WebInterfaceImp(SimpMessagingTemplate messagingTemplate) throws RemoteException {

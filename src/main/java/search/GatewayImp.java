@@ -364,8 +364,23 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
 
     @Override
-    public void subscribe(WebInterface c) throws RemoteException {
+    public Map<String, List<String>> subscribe(WebInterface c) throws RemoteException {
+        
+        List<String> listaPesq = new ArrayList<>(searchFreq.keySet());
         web= c;
+        Map<String, List<String>> var = new HashMap<>();
+        var.put("barrels", getBarrelsNames());
+        var.put("topTen", new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))));
+        List<String> exectime= new ArrayList<>();
+        if(countPesquisas==0){
+            exectime.add(String.valueOf(0));
+        }else {
+            exectime.add(String.valueOf(somaTempoExecucao/countPesquisas));
+        }
+        
+        var.put("execTime", exectime);
+
+        return var;
     }
 
 
