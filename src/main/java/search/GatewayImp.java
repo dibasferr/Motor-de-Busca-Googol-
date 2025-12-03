@@ -1,6 +1,8 @@
 package search;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -58,14 +60,8 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      */
     List<ClientInterface> clients= new ArrayList<>();//do callback to all the stored references
 
-    /**
-     * Lista de Storage Barrels registados na Gateway.
-     * <p>
-     * Cada elemento é uma referência remota a {@link StorageBarrelInterface}.
-     */
-    List<StorageBarrelInterface> barrels= new ArrayList<>();
-
-    List<String> barrelsNames= new ArrayList<>();
+    /** Map de barrels registados: nome -> stub (thread-safe) */
+    private final ConcurrentHashMap<String, StorageBarrelInterface> barrelsMap = new ConcurrentHashMap<>();
 
     long somaTempoExecucao=0;
     int countPesquisas=0;
@@ -79,13 +75,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      * Contador simples para gerar identificadores de barrel (Barrel1, Barrel2, ...).
      */
     int barrel_counter=1;
-
-    /**
-     * Indice usado para round-robin na selecção do barrel para consultas.
-     * <p>
-     * Nota: campo não thread-safe; em ambientes concorrentes recomenda-se {@code AtomicInteger}.
-     */
-    int prev_barrel=0; 
 
     /**
      * Nome do cliente (uso experimental/no momento não usado de forma consistente).
@@ -173,7 +162,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      * @throws RemoteException Exceções remotas propagadas durante a chamada ao barrel.
      */
     @Override
-    public List<PageInfo> pesquisa_word(String word){
+    public List<PageInfo> pesquisa_word(String word) throws RemoteException{
 
         long inicio = System.currentTimeMillis();
 
@@ -181,31 +170,29 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         String[] words= word.split(" ");
         List <String> wordss= new ArrayList<>(Arrays.asList(words));
 
-        StorageBarrelInterface barrel;
-
-        //Load balancing
-        prev_barrel= (prev_barrel+1) % barrels.size();
-        barrel= barrels.get(prev_barrel);
-       //end
-
         while(true){
+            StorageBarrelInterface barrel = getBarrel();
+            if (barrel == null) {
+                System.out.println("Nenhum barrel ativo disponível.");
+                return Collections.emptyList();
+            }
+
             try {
                 result= barrel.returnSearchResult(wordss);
                 System.out.println(result);
+                break;
 
             } catch (java.rmi.ConnectException e) {
 
                 System.out.println("Barrel desconectado. Tentando outro...");
-                barrels.remove(prev_barrel);
-                barrelsNames.remove(barrel_counter);
-                barrel= barrels.get(0);// se ha menos um barrel, so um existe
-                prev_barrel=0;
+                removeBarrel(barrel);
                 continue;
 
             } catch (java.rmi.RemoteException e) {
                 System.out.println("Erro remoto ao contactar Barrel.");
                 e.printStackTrace();
                 continue;
+
             }catch (Exception e) {
                 e.printStackTrace();
             }
@@ -314,9 +301,9 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     public List<String> pesquisa_URL(String url){
         
         try {
-             //Load balancing
-            prev_barrel= (prev_barrel+1) % barrels.size();
-            StorageBarrelInterface barrel= barrels.get(prev_barrel);
+            // Load balancing usando getBarrel()
+            StorageBarrelInterface barrel = getBarrel();
+            if (barrel == null) return Collections.emptyList();
             Set<String> res = barrel.searchUrl(url);
             return new ArrayList<>(res);
        //end
@@ -348,10 +335,11 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      */
     @Override
     public String subscribe(StorageBarrelInterface b){
-        barrels.add(b);
-        System.out.println("Adicionado com sucesso");
-        barrelsNames.add(String.format("Barrel%d", barrel_counter));
-        return String.format("Barrel%d", barrel_counter++);
+        String name = String.format("Barrel%d", barrel_counter++);
+        barrelsMap.put(name, b);
+        System.out.println("Adicionado com sucesso: " + name);
+        // não devolvemos snapshot aqui — barrels novos podem pedir snapshot eles próprios
+        return name;
     }
 
 
@@ -382,7 +370,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      */
     @Override
     public  Integer getBarrelNum(){
-        return barrels.size();
+        return barrelsMap.size();
     }
 
     /**
@@ -395,11 +383,11 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      *           ou idealmente por um mecanismo thread-safe round-robin (usar {@code AtomicInteger}).
      */
     @Override
-    public StorageBarrelInterface getBarrel(){ //fixando o numero de barrels a 2
+    public StorageBarrelInterface getBarrel(){ //fixando o numero de barrels à quantidade de barrels na lista
+        List<StorageBarrelInterface> values = new ArrayList<>(barrelsMap.values());
+        if (values.isEmpty()) return null;
         Random r= new Random();
-        if(barrels.size()>1) return barrels.get(r.nextInt(2));
-        if(barrels.size()==0) return null;
-        return barrels.get(0);
+        return values.get(r.nextInt(values.size()));
     }
 
 //End o interface implementation
@@ -438,19 +426,40 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     }
 
     @Override
-    public List<String> getBarrelsNames() throws RemoteException {
-        return barrelsNames;
+    public synchronized List<String> getBarrelsNames() throws RemoteException {
+        Iterator<Map.Entry<String, StorageBarrelInterface>> it = barrelsMap.entrySet().iterator();
+        while(it.hasNext()) {
+            Map.Entry<String, StorageBarrelInterface> entry = it.next();
+            try {
+                entry.getValue().teste(); // método RMI leve só pra testar se tá vivo
+            } catch(Exception e) {
+                it.remove();
+                System.out.println("Removed dead barrel: " + entry.getKey());
+            }
+        }
+
+        return new ArrayList<>(barrelsMap.keySet());
     }
 
     @Override
     public void removeBarrel(StorageBarrelInterface c) throws RemoteException {
-        barrels.remove(c);
+        String keyToRemove = null;
+        for (Map.Entry<String, StorageBarrelInterface> e : barrelsMap.entrySet()) {
+            if (e.getValue().equals(c)) {
+                keyToRemove = e.getKey();
+                break;
+            }
+        }
+        if (keyToRemove != null) {
+            barrelsMap.remove(keyToRemove);
+            System.out.println("Removed barrel : " + keyToRemove);
+        }
     }
 
     @Override
     public List<StorageBarrelInterface> getBarrels() throws RemoteException {
         // TODO Auto-generated method stub
-        return barrels;
+        return new ArrayList<>(barrelsMap.values());
     }
 
 }
