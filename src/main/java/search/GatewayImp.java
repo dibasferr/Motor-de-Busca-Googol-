@@ -369,7 +369,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      * @return Número de barrels activos.
      */
     @Override
-    public  Integer getBarrelNum(){
+    public int getBarrelNum(){
         return barrelsMap.size();
     }
 

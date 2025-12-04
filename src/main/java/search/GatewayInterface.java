@@ -29,7 +29,7 @@ public interface GatewayInterface extends Remote {
     
     public  void collback() throws RemoteException; 
 
-    public  Integer getBarrelNum() throws RemoteException; 
+    public int getBarrelNum() throws RemoteException; 
 
     public StorageBarrelInterface getBarrel() throws RemoteException;
 
