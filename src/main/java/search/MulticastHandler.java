@@ -97,10 +97,11 @@ public class MulticastHandler extends Thread {
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 socket.receive(packet);
                 System.out.println("Recebi uma mensagem");
+                /* 
                 if (packet.getAddress().equals(InetAddress.getByName(endereço))) {//Deixar a mensagem ack vir do outro barrel
                     continue;
                 }
-
+                */
                 byte[] dados = packet.getData();
                 int length = packet.getLength();
                 //Enviar ACK 

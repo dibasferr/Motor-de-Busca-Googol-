@@ -2,8 +2,6 @@ package search;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -38,4 +36,6 @@ public interface GatewayInterface extends Remote {
     public List<StorageBarrelInterface> getBarrels() throws RemoteException;
     
     public void removeBarrel(StorageBarrelInterface c) throws RemoteException;
+
+    public void addVisited(String url) throws RemoteException;
 }

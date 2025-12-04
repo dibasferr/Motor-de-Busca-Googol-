@@ -366,8 +366,12 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      */
     public void envio(DatagramPacket packet, MulticastSocket socket){ //metodo auxiliar
         System.out.println("SENT\n\n");
-        while(true){
+
+        int counter=5; //5 tentativas de envio de envio
+        
+        while(counter>0){
             try {
+
                 List<StorageBarrelInterface> aux= gateway.getBarrels();
                 
                 for (StorageBarrelInterface i:aux) {
@@ -395,9 +399,9 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
                     }
                 }
             
-
             } catch (SocketTimeoutException e) {
-                e.printStackTrace();
+                counter--;
+                System.out.println("TimeOut de socket de envio multicast no MainStorage");
 
             }catch(Exception e){
                 e.printStackTrace();

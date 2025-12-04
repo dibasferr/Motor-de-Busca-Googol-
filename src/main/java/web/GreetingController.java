@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class GreetingController {
 	public Map<String, List<String>> statistics ;
+
 	/////////////////////////////////////SETUP///////////////////////////////////////////////////////////////
 	
 	@Autowired
@@ -164,7 +165,10 @@ public class GreetingController {
 				Future<String> futureResult = executor.submit(tarefa);
 
 				// Executa outras coisas enquanto a thread trabalha
+	
 				List<PageInfo> result = gateway_stub.pesquisa_word(wordToLook);
+
+
 
 				model.addAttribute("resultado", result);
 				// Para pegar o resultado da thread (bloqueia até terminar)
