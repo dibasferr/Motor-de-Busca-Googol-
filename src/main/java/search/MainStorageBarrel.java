@@ -505,7 +505,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
     }
 
     @Override
-    public synchronized void guardarBarrelInfoBinario(String nomeFicheiro){
+    public synchronized void guardarBarrelInfoBinario(String nomeFicheiro) throws RemoteException{
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(nomeFicheiro))) {
             oos.writeObject(this.index);
             oos.writeObject(this.linkPages);
@@ -519,7 +519,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
     }
 
     @Override
-    public synchronized void carregarBarrelInfoBinario(String nomeFicheiro) {
+    public synchronized void carregarBarrelInfoBinario(String nomeFicheiro) throws RemoteException{
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(nomeFicheiro))) {
 
             // Carregar os dados do Index
