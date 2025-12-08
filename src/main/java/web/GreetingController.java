@@ -69,19 +69,6 @@ public class GreetingController {
 			ollama.setRequestTimeoutSeconds(120);
 			
 			String model = "mistral:7b";
-			//ollama.pullModel(model);
-
-			//OllamaChatRequest builder = OllamaChatRequest.builder().withModel(model);
-
-			// create first user question
-			//OllamaChatRequest requestModel =
-					//builder.withMessage(OllamaChatMessageRole.USER, wordToLook)
-							//.build();
-
-			// start conversation with model
-			//OllamaChatResult chatResult = ollama.chat(requestModel, null);
-
-			//return  chatResult.getResponseModel().getMessage().getResponse();
 
 			OllamaChatRequest request = OllamaChatRequest.builder()
 				.withModel(model)
