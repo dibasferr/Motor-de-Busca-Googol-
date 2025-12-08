@@ -1,7 +1,6 @@
 package search;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.io.FileInputStream;
@@ -106,7 +105,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     @Override
     public synchronized String getURL(){
         if(URL_queue.isEmpty()) return null;
-        visited.add(URL_queue.peek());
         return URL_queue.poll();
     }
 
@@ -233,6 +231,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      */
     @Override
     public void collback() {
+        System.out.println("ooh ali n'entra dja");
         List<String> listaPesq = new ArrayList<>(searchFreq.keySet());
 
         Iterator<ClientInterface> it = clients.iterator(); //Para q a alteracao da lista nao afete a iteracao sobre ela
@@ -245,6 +244,9 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
                 updateWeb(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
                 getBarrelsNames(), somaTempoExecucao/countPesquisas);
+
+                System.out.println("fiz o update\n\n");//Tem q considerar o cliente web
+                
             } catch (java.rmi.ConnectException e) {
                 System.out.println("Cliente desconectado. Removendo da lista...");
                 it.remove(); // o cliente caiu
@@ -338,6 +340,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         String name = String.format("Barrel%d", barrel_counter++);
         barrelsMap.put(name, b);
         System.out.println("Adicionado com sucesso: " + name);
+        this.collback();
         // não devolvemos snapshot aqui — barrels novos podem pedir snapshot eles próprios
         return name;
     }
@@ -454,12 +457,18 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
             barrelsMap.remove(keyToRemove);
             System.out.println("Removed barrel : " + keyToRemove);
         }
+        System.out.println("aquiiii");
+        this.collback();
     }
 
     @Override
     public List<StorageBarrelInterface> getBarrels() throws RemoteException {
-        // TODO Auto-generated method stub
         return new ArrayList<>(barrelsMap.values());
+    }
+
+    @Override
+    public void addVisited(String url) throws RemoteException {
+        this.visited.add(url);
     }
 
 }

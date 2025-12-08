@@ -1,7 +1,6 @@
 package search;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.rmi.Remote;
 import java.rmi.RemoteException;

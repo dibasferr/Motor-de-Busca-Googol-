@@ -111,7 +111,9 @@ public class Crawler {
 
                         ref=stub_barrel.addLinks(url, Refs,crawler_name, ref);
                         ref++;
-                        //uma thread para esta funcao tambem
+                        
+                        //adicionar url indexado a queue de visitados. Garantindo que so apos ser visitado sera considerado efetivamente visitado
+                        stub.addVisited(url);
                         
                         stub.addURLs(new ArrayList<>(Refs)); //Inserir elementos na url queue
                         //mandar esses links ao barrel tmb. O barrel vai receber uma lista um lista de links e o link aonde eles sairam 
@@ -129,6 +131,7 @@ public class Crawler {
                     }catch (Exception e) {
                         System.out.println("Pagina nao tratavel");
                         url=stub.getURL();
+                        stub.addVisited(url); //Se for nao tratavel, adiciona aos visitados para nao visitar novamente
                         e.printStackTrace();
                     }
                 }
