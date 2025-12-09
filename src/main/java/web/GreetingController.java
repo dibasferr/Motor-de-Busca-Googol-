@@ -111,7 +111,7 @@ public class GreetingController {
 		}
 		else{
 			try {
-				/* 
+				
 				// Supondo que Completion retorna String
 				Callable<String> tarefa = () -> chat.Completion(wordToLook);
 
@@ -144,7 +144,7 @@ public class GreetingController {
 				// Encerra o executor
 				executor.shutdown();
 						
-				*/		
+					
 				String confirmation= searchForm.getIndexHackerNews();
 				confirmation = confirmation.replace(",", "");
 
