@@ -111,7 +111,7 @@ public class GreetingController {
 		}
 		else{
 			try {
-
+				/* 
 				// Supondo que Completion retorna String
 				Callable<String> tarefa = () -> chat.Completion(wordToLook);
 
@@ -143,10 +143,13 @@ public class GreetingController {
 
 				// Encerra o executor
 				executor.shutdown();
-								
+						
+				*/		
 				String confirmation= searchForm.getIndexHackerNews();
+				confirmation = confirmation.replace(",", "");
 
 				if(confirmation.equals("yes")){
+
 					//Codigo para index URLs de top Stories de HackerNews que contenham os termos da variavel "wordToLook"
 					List<String> hnUrls = hackerNewsService.getFilteredTopStories(wordToLook);
 
