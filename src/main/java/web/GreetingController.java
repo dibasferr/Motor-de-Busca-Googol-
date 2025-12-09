@@ -1,11 +1,6 @@
 package web;
 
 
-import io.github.ollama4j.Ollama;
-import io.github.ollama4j.models.chat.OllamaChatMessageRole;
-import io.github.ollama4j.models.chat.OllamaChatRequest;
-import io.github.ollama4j.models.chat.OllamaChatResult;
-
 import search.PageInfo;
 
 import search.GatewayInterface;
@@ -26,13 +21,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 
-
+import web.service.chatCompletion;
 
 @Controller
 public class GreetingController {
 	public Map<String, List<String>> statistics ;
 
-	/////////////////////////////////////SETUP///////////////////////////////////////////////////////////////
+	private final chatCompletion chat;
 	
 	@Autowired
 	WebInterfaceImp conector;
@@ -42,8 +37,8 @@ public class GreetingController {
 
 
 
-	public GreetingController(){
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public GreetingController(chatCompletion chat){
+		this.chat= chat;
 	}
 
 
@@ -62,31 +57,7 @@ public class GreetingController {
     }
 
 	
-	//Para a implementacao do chat completion, foram usadas as informações disponíveis nesta pagina oficial : https://ollama4j.github.io/ollama4j/apis-generate/chat
-	public String Completion(String wordToLook){
-		try{
-			Ollama ollama = new Ollama("http://localhost:11434/");
-			ollama.setRequestTimeoutSeconds(120);
-			
-			String model = "mistral:7b";
-
-			OllamaChatRequest request = OllamaChatRequest.builder()
-				.withModel(model)
-				.withMessage(OllamaChatMessageRole.USER, wordToLook)
-				.build();
-
-			OllamaChatResult result = ollama.chat(request, null);
-			if (result == null || result.getResponseModel() == null || result.getResponseModel().getMessage() == null) {
-				return null;
-			}
-			return result.getResponseModel().getMessage().getResponse();
-
-		}catch(Exception e){
-			System.out.println("Erro ao comunicar com o Ollama server");
-			e.printStackTrace();
-		}
-        return null;
-    }
+	
 
 
 	public boolean isValidURL(String wordToIndex) {
@@ -141,9 +112,8 @@ public class GreetingController {
 		else{
 			try {
 
-				GreetingController obj = new GreetingController();
 				// Supondo que Completion retorna String
-				Callable<String> tarefa = () -> obj.Completion(wordToLook);
+				Callable<String> tarefa = () -> chat.Completion(wordToLook);
 
 				// Cria um executor para gerenciar threads
 				ExecutorService executor = Executors.newSingleThreadExecutor();
