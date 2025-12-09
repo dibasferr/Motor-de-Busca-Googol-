@@ -37,8 +37,9 @@ public class GreetingController {
 
 	private HackerNewsService hackerNewsService;
 
-	public GreetingController(chatCompletion chat){
+	public GreetingController(chatCompletion chat, HackerNewsService hackerNewsService){
 		this.chat= chat;
+		this.hackerNewsService = hackerNewsService;
 	}
 
 
@@ -141,11 +142,8 @@ public class GreetingController {
 					System.out.println("Problema com a thread de execução do Ollama");
 				}
 
-				System.out.println("\n\nBUZZZZ\n\n");
 				// Encerra o executor
 				executor.shutdown();
-
-				System.out.println("\n\nBUZZZZ\n\n");
 						
 					
 				String confirmation= searchForm.getIndexHackerNews();
@@ -154,7 +152,7 @@ public class GreetingController {
 				if(confirmation.equals("yes")){
 					//Codigo para index URLs de top Stories de HackerNews que contenham os termos da variavel "wordToLook"
 					List<String> hnUrls = hackerNewsService.getFilteredTopStories(wordToLook);
-
+					
 					int count = 0;
 
 					for (String url : hnUrls) {

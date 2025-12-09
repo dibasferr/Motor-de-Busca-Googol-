@@ -56,7 +56,6 @@ public class HackerNewsService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return urls;
     }
 }
