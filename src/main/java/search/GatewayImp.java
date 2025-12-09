@@ -231,10 +231,22 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      */
     @Override
     public void collback() {
-        System.out.println("ooh ali n'entra dja");
         List<String> listaPesq = new ArrayList<>(searchFreq.keySet());
 
         Iterator<ClientInterface> it = clients.iterator(); //Para q a alteracao da lista nao afete a iteracao sobre ela
+
+        if(web != null){
+            
+            try {
+                updateWeb(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
+                getBarrelsNames(), somaTempoExecucao/countPesquisas);
+
+                System.out.println("fiz o update\n\n");//Tem q considerar o cliente web
+            } catch (Exception e) {
+                System.out.println("Erro a comunicar com o web Server");
+            }
+            
+        }
 
         while (it.hasNext()) {
             ClientInterface client = it.next();
@@ -242,11 +254,8 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
                 ((ClientInterface)client).updateStatistics(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
                                                             getBarrelsNames(), somaTempoExecucao/countPesquisas);
 
-                updateWeb(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
-                getBarrelsNames(), somaTempoExecucao/countPesquisas);
-
-                System.out.println("fiz o update\n\n");//Tem q considerar o cliente web
                 
+
             } catch (java.rmi.ConnectException e) {
                 System.out.println("Cliente desconectado. Removendo da lista...");
                 it.remove(); // o cliente caiu
