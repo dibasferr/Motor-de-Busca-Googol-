@@ -188,7 +188,7 @@ public class GreetingController {
 			} catch (Exception e) {
 				System.out.println("Erro a comunicar com a gateway");
 			}
-			return "index";
+			return redirect(model);
 		}
 		else{
 			searchForm.setVarTypeError(true); //passa-se o ultimo parametro para gerar
