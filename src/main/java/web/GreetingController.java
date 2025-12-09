@@ -184,22 +184,28 @@ public class GreetingController {
 					System.out.println("Problema com a thread de execução do Ollama");
 				}
 
+				System.out.println("\n\nBUZZZZ\n\n");
 				// Encerra o executor
 				executor.shutdown();
+
+				System.out.println("\n\nBUZZZZ\n\n");
 								
 				String confirmation= searchForm.getIndexHackerNews();
 
-				if(confirmation.equals("yes")){
+				if("yes".equalsIgnoreCase(confirmation)){
+					System.out.println("\n\nBUZZZZ\n\n");
 					//Codigo para index URLs de top Stories de HackerNews que contenham os termos da variavel "wordToLook"
 					List<String> hnUrls = hackerNewsService.getFilteredTopStories(wordToLook);
 
 					int count = 0;
 
 					for (String url : hnUrls) {
+						System.out.println("Indexando HN URL: " + url);
 						try {
 							gateway_stub.addURL(url);
 							count++;
 						} catch (Exception e) {
+							System.out.println("Erro ao indexar: " + url);
 							e.printStackTrace();
 						}
 					}
@@ -207,6 +213,9 @@ public class GreetingController {
 					model.addAttribute("hnIndexMessage", 
 						"Foram indexadas " + count + " top stories do Hacker News que continham '" + wordToLook + "'."
 					);
+
+					System.out.println("hnIndexMessage enviado: " + model.getAttribute("hnIndexMessage"));
+
 				}
 
 			} catch (Exception e) {

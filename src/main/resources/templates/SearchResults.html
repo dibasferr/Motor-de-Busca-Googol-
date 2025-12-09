@@ -229,17 +229,16 @@
     </div>
 
     <!-- POPUP Hacker News -->
-    <!-- <script th:if="${hnIndexMessage}">
+    <script th:if="${hnIndexMessage}">
         alert([[${hnIndexMessage}]]);
-    </script> -->
+    </script>
 
     <div th:if="${hnIndexMessage}" class="popup">
       <p th:text="${hnIndexMessage}"></p>
     </div>
-
     
-    <script th:inline="javascript">
-      let results = /*[[${resultado}]]*/ [];
+  <script th:inline="javascript">
+    let results = /*[[${resultado}]]*/ [];
   </script>
   
   <script>
