@@ -117,6 +117,7 @@ public class Crawler {
                         
                         stub.addURLs(new ArrayList<>(Refs)); //Inserir elementos na url queue
                         //mandar esses links ao barrel tmb. O barrel vai receber uma lista um lista de links e o link aonde eles sairam 
+
                         url=stub.getURL();
                         System.out.println("reach out");
 

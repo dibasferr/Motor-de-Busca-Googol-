@@ -13,5 +13,7 @@ public interface StorageBarrelInterface extends Remote {
     public Set<String> searchUrl(String url) throws RemoteException;
     public BarrelSnapshot reboot() throws RemoteException;
     public void teste() throws RemoteException;
+    public void guardarBarrelInfoBinario(String nomeFicheiro) throws RemoteException;
+    public void carregarBarrelInfoBinario(String nomeFicheiro) throws RemoteException;
 
 }

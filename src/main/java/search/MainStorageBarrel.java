@@ -3,8 +3,14 @@ package search;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -86,6 +92,10 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
     static String porta=null;
     static Properties config = new Properties();
 
+    String fileName = "./fileBarrel.ser"; // Nome do arquivo binário para guardar e atualizar info de barrels
+
+    int counter = 0; // Contador para gerenciar quando guardar info no ficheiro binário
+
     //@SuppressWarnings("unchecked")
     public MainStorageBarrel() throws RemoteException {
         index = new HashMap<>();
@@ -114,22 +124,29 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             
             System.out.println("A pedir barrel ao gateway...");
             StorageBarrelInterface S = gateway.getBarrel();
-            System.out.println("Recebi do gateway: " + S);
+
+            if (S == null) {
+                File f = new File(fileName);
+                
+                if (f.exists()) {
+                    this.carregarBarrelInfoBinario(fileName);
+                } else{
+                    System.out.println("O ficheiro não existe");
+                }
+            }
+            else {
+                System.out.println("Recebi do gateway: " + S);
             
-            if (S != null) {
                 BarrelSnapshot snap = S.reboot();
                 this.index = snap.index;
                 this.linkPages = snap.linkPages;
                 this.urlPopularity = snap.urlPopularity;
                 this.pageInfo = snap.pageInfo;
-                this.last_sender = snap.last_sender;
             }
-
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
     /**
@@ -148,6 +165,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
     @Override
     public synchronized int addWordToStructure(Set<String> words, String url,PageInfo page, String Crawler, int ref) {
         int count=0;
+
         //Se eu guardar o valor da ultima referencia dos dois crawlers, posso fazer filtragem corretamente
         if(last_sender.containsKey(Crawler) && (last_sender.get(Crawler) >= ref) && (ref!=-1)) return ref;
 
@@ -177,13 +195,25 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         }
 
         for (String word : words){
-
             index.computeIfAbsent(word,  k -> new HashSet<>()).add(url);
         }
         System.out.printf("Foram enviados %d chunks\n", count);
         System.out.println("Index updated");
         urlPopularity.putIfAbsent(url, 0); // garante que a URL existe no mapa
         pageInfo.put(url, page);
+
+        counter++;
+
+        try{
+            int quantidadeBarrels = gateway.getBarrelNum();
+            if (counter >= quantidadeBarrels * 10) {
+                counter %= quantidadeBarrels * 10;
+                this.guardarBarrelInfoBinario(fileName);
+            }
+        } 
+        catch (Exception e) {
+                //e.printStackTrace();
+        }
        
         return ref + count;
     }
@@ -475,8 +505,76 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         snap.linkPages = this.linkPages;
         snap.urlPopularity = this.urlPopularity;
         snap.pageInfo = this.pageInfo;
-        snap.last_sender = this.last_sender;
         return snap;
+    }
+
+    @Override
+    public synchronized void guardarBarrelInfoBinario(String nomeFicheiro) throws RemoteException{
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(nomeFicheiro))) {
+            oos.writeObject(this.index);
+            oos.writeObject(this.linkPages);
+            oos.writeObject(this.urlPopularity);
+            oos.writeObject(this.pageInfo);
+            System.out.println("Index guardado em formato binário no ficheiro " + nomeFicheiro);
+        }
+        catch (IOException e) {
+            System.err.println("Erro ao guardar o index binário: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public synchronized void carregarBarrelInfoBinario(String nomeFicheiro) throws RemoteException{
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(nomeFicheiro))) {
+
+            // Carregar os dados do Index
+            Object obj = ois.readObject();
+            if (obj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Set<String>> loadedIndex = (Map<String, Set<String>>) obj;
+                this.index = loadedIndex;
+                System.out.println("Index carregado de ficheiro binário: " + nomeFicheiro);
+            }
+
+            // Carregar os dados do Index
+            Object obj2 = ois.readObject();
+            if (obj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Set<String>> loadedLinkPages = (Map<String, Set<String>>) obj2;
+                this.linkPages = loadedLinkPages;
+                System.out.println("LinkPages carregado de ficheiro binário: " + nomeFicheiro);
+            }
+
+            // Carregar os dados do Index
+            Object obj3 = ois.readObject();
+            if (obj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Integer> loadedUrlPopularity = (Map<String, Integer>) obj3;
+                this.urlPopularity = loadedUrlPopularity;
+                System.out.println("UrlPopularity carregado de ficheiro binário: " + nomeFicheiro);
+            }
+
+            // Carregar os dados do Index
+            Object obj4 = ois.readObject();
+            if (obj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, PageInfo> loadedPageInfo = (Map<String, PageInfo>) obj4;
+                this.pageInfo = loadedPageInfo;
+                System.out.println("PageInfo carregado de ficheiro binário: " + nomeFicheiro);
+            }
+
+        } 
+        catch (FileNotFoundException e) {
+            System.out.println("Ficheiro não encontrado. Nenhum index carregado.");
+        } 
+        catch (EOFException e) {
+            System.out.println("Ficheiro vazio ou incompleto.");
+        } 
+        catch (InvalidClassException e) {
+            System.err.println("Classe incompatível com os dados serializados. Pode ter mudado a estrutura.");
+        } 
+        catch (IOException | ClassNotFoundException e) {
+            System.err.println("Erro ao carregar o index binário: " + e.getMessage());
+        }
     }
 
     /**

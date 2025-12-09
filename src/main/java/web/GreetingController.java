@@ -35,7 +35,7 @@ public class GreetingController {
 	@Resource(name = "applicationScopedGatewayGenerator")
 	private GatewayInterface gateway_stub;
 
-
+	private HackerNewsService hackerNewsService;
 
 	public GreetingController(chatCompletion chat){
 		this.chat= chat;
@@ -147,11 +147,23 @@ public class GreetingController {
 				String confirmation= searchForm.getIndexHackerNews();
 
 				if(confirmation.equals("yes")){
-
-
 					//Codigo para index URLs de top Stories de HackerNews que contenham os termos da variavel "wordToLook"
-				
-				
+					List<String> hnUrls = hackerNewsService.getFilteredTopStories(wordToLook);
+
+					int count = 0;
+
+					for (String url : hnUrls) {
+						try {
+							gateway_stub.addURL(url);
+							count++;
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+
+					model.addAttribute("hnIndexMessage", 
+						"Foram indexadas " + count + " top stories do Hacker News que continham '" + wordToLook + "'."
+					);
 				}
 
 			} catch (Exception e) {
