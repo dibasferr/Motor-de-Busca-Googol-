@@ -608,10 +608,9 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
 
 
         try{
-            LocateRegistry.createRegistry(1099);
-            System.setProperty("java.rmi.server.hostname", endereço);
+            //LocateRegistry.createRegistry(1099);
             System.out.println("RMI registry iniciado na porta 1099");
-
+            System.setProperty("java.rmi.server.hostname", endereço);
             MainStorageBarrel barrel = new MainStorageBarrel();
 
 
