@@ -20,6 +20,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 
 /**
  * Implementação do Storage Barrel principal do sistema "Googol".
@@ -105,6 +106,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         pageInfo= new HashMap<>();
 
         String endereço=null;
+        String endereçoBarrel=null;
         String porta=null;
         Properties config = new Properties();
 
@@ -113,13 +115,14 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             config.load(input);
             // Lê as propriedades
             endereço = config.getProperty("rmi.host2");//pega da sua maquina
+            endereçoBarrel = config.getProperty("rmi.host1");//pega da sua maquina
             porta = config.getProperty("rmi.port2");
         }catch(IOException e) {
             System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
         }
 
         try {
-            
+            System.setProperty("java.rmi.server.hostname", endereçoBarrel);
             gateway= (GatewayInterface)Naming.lookup(String.format("rmi://%s:%s/Gateway",endereço,porta));
             
             System.out.println("A pedir barrel ao gateway...");
@@ -605,7 +608,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
 
 
         try{
-            //LocateRegistry.createRegistry(1099);
+            LocateRegistry.createRegistry(1099);
             System.setProperty("java.rmi.server.hostname", endereço);
             System.out.println("RMI registry iniciado na porta 1099");
 
@@ -615,6 +618,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             nome= gateway.subscribe(barrel);
             
             System.out.printf("Eu sou %s\n", nome);
+
             Naming.rebind(nome, barrel);
            
 
