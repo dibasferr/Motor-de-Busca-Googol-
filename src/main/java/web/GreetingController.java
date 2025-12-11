@@ -5,10 +5,13 @@ import search.PageInfo;
 
 import search.GatewayInterface;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.*;
 
 import javax.annotation.PostConstruct;
@@ -29,6 +32,7 @@ public class GreetingController {
 
 	private final chatCompletion chat;
 	
+	
 	@Autowired
 	WebInterfaceImp conector;
 
@@ -47,9 +51,23 @@ public class GreetingController {
     public void setupSubscription() {
 				
         // Obtenha o bean do controller (injete-o ou crie-o, se não for um bean
-        
+        String endereco= null;
         try {
             // A ação de subscrição é executada uma vez
+			try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
+			Properties props = new Properties();
+
+			// Carrega o arquivo .properties
+			props.load(input);
+
+			// Lê as propriedades
+			endereco= props.getProperty("rmi.host1");
+		
+			}catch(IOException e) {
+				System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
+			}
+
+			System.setProperty("java.rmi.server.hostname", endereco);
             conector.statistics= gateway_stub.subscribe(conector);
 			System.out.println("Controller subscrito com sucesso");
         } catch (Exception e) {

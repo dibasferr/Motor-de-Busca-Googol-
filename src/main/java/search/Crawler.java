@@ -89,9 +89,12 @@ public class Crawler {
                         Set< String> words_indexed= new HashSet<>();
 
                         while (tokens.hasMoreElements() && countTokens++ < 100){
-                            words_indexed.add(tokens.nextToken().toLowerCase());  
+                            String palavra= tokens.nextToken().toLowerCase();
+                            palavra= palavra.replaceAll("[ ,.:;!?]()", "");
+                            words_indexed.add(palavra);  
                         }
 
+                        System.out.println(words_indexed);
                         // Armazenar para cada página sua url, seu título e citação
                         String titulo = doc.title();
                         String texto = doc.body().text();

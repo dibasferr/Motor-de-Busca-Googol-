@@ -395,6 +395,19 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         }else {
             exectime.add(String.valueOf(somaTempoExecucao/countPesquisas));
         }
+        List<String> sizes= new ArrayList<>();
+        List<StorageBarrelInterface> BarrelSet = new ArrayList<>(barrelsMap.values());
+        
+        for (StorageBarrelInterface b : BarrelSet) {
+            try {
+                sizes.add( String.valueOf(b.returnSize()) );
+                System.out.println("O tamanho do barrel é " + b.returnSize());
+            } catch (Exception e) {
+                System.out.println("Erro a obter o tamanho do barrel");
+            }        
+        }
+
+        var.put("sizes", sizes);
         
         var.put("execTime", exectime);
         return var;
