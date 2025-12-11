@@ -209,10 +209,11 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             if (counter >= quantidadeBarrels * 10) {
                 counter %= quantidadeBarrels * 10;
                 this.guardarBarrelInfoBinario(fileName);
+                gateway.collback();
             }
         } 
         catch (Exception e) {
-                //e.printStackTrace();
+            System.out.println("Erro a guardar file de recuperação ou com o callback de estatisticas");
         }
        
         return ref + count;
@@ -402,17 +403,29 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         while(counter>0){
             try {
 
+                /*
                 List<StorageBarrelInterface> aux= gateway.getBarrels();
+<<<<<<< HEAD
                 /* 
+=======
+                 
+>>>>>>> 73a87bb63fab5868360daa9ac4b71722e6c08e1e
                 for (StorageBarrelInterface i:aux) {
                     try {
                         i.teste();
                     } catch (java.rmi.ConnectException | java.rmi.NoSuchObjectException e) {
                         gateway.removeBarrel(i);
+<<<<<<< HEAD
                     } catch (Exception e) {
                         // NÃO remover, porque pode ser apenas overload
                         System.err.println("Barrel lento mas ainda vivo: " + e);
                     }   
+=======
+                    } catch (Exception e){
+                        System.out.println("Lento mas vivo");
+                    }
+                         
+>>>>>>> 73a87bb63fab5868360daa9ac4b71722e6c08e1e
                 }*/
 
                 if(gateway.getBarrelNum()==1) break;
@@ -598,8 +611,8 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             // Carrega o arquivo .properties
             config.load(input);
             // Lê as propriedades
-            endereço = config.getProperty("rmi.host2");//pega da sua maquina
-            porta = config.getProperty("rmi.port2");
+            endereço = config.getProperty("rmi.host1");//pega da sua maquina
+            porta = config.getProperty("rmi.port1");
         }catch(IOException e) {
             System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
         }
@@ -632,6 +645,11 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
     @Override
     public void teste() throws RemoteException {
         return;
+    }
+
+    @Override
+    public int returnSize() throws RemoteException {
+        return index.keySet().size();
     }
 }
 

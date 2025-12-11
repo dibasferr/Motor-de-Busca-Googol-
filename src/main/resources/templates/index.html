@@ -198,16 +198,21 @@
                 // --- 2. ATUALIZA BARRELS (Tabela) ---
                 const barrelsTBody = document.getElementById("barrels-list");
                 barrelsTBody.innerHTML = ''; // Limpa a lista anterior
+
                 if (msg.barrels && Array.isArray(msg.barrels)) {
-                    msg.barrels.forEach(barrel => {
+                    msg.barrels.forEach((barrel, index) => {
                         let row = barrelsTBody.insertRow();
-                        let c1 = row.insertCell(0);
+                        let c1 = row.insertCell(0); // Nome do barrel
+                        let c2 = row.insertCell(1); // Tamanho correspondente
+
                         // Adiciona a classe de estilo da linha de tabela Bootstrap
                         row.classList.add('table-row'); 
+
                         c1.textContent = barrel;
+                        c2.textContent = msg.sizes[index]; // Pega o tamanho da outra lista
                     });
                 }
-    
+
                 // --- 3. ATUALIZA TOP TEN (Lista Classificada) ---
                 const topTenList = document.getElementById("top-ten-dynamic");
                 topTenList.innerHTML = ''; // Limpa a lista anterior

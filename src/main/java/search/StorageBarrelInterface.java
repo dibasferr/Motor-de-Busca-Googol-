@@ -15,5 +15,6 @@ public interface StorageBarrelInterface extends Remote {
     public void teste() throws RemoteException;
     public void guardarBarrelInfoBinario(String nomeFicheiro) throws RemoteException;
     public void carregarBarrelInfoBinario(String nomeFicheiro) throws RemoteException;
+    public int returnSize() throws RemoteException;
 
 }
