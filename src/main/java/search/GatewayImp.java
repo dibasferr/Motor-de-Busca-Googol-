@@ -65,6 +65,8 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     long somaTempoExecucao=0;
     int countPesquisas=0;
 
+    int prevBarrel= 0;
+
     /**
      * Contador simples para gerar identificadores de cliente (Client1, Client2, ...).
      */
@@ -235,15 +237,23 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
         Iterator<ClientInterface> it = clients.iterator(); //Para q a alteracao da lista nao afete a iteracao sobre ela
 
+        double tempoMedio=0;
+        if(countPesquisas!=0){
+            tempoMedio=somaTempoExecucao/countPesquisas;
+        }
+
         if(web != null){
             
             try {
-                updateWeb(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
-                getBarrelsNames(), somaTempoExecucao/countPesquisas);
 
+                updateWeb(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
+                getBarrelsNames(), tempoMedio);
+ 
                 System.out.println("fiz o update\n\n");//Tem q considerar o cliente web
+                
             } catch (Exception e) {
                 System.out.println("Erro a comunicar com o web Server");
+                e.printStackTrace();
             }
             
         }
@@ -252,7 +262,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
             ClientInterface client = it.next();
             try {
                 ((ClientInterface)client).updateStatistics(new ArrayList<>(listaPesq.subList(0, Math.min(10, listaPesq.size()))), 
-                                                            getBarrelsNames(), somaTempoExecucao/countPesquisas);
+                                                            getBarrelsNames(), (long)tempoMedio);
 
                 
 
@@ -272,8 +282,23 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
 
     public void updateWeb(List<String> topTen, List<String> barrels, double Time){
+
         Map<String, List<String>> var = new HashMap<>();
         var.put("barrels", barrels);
+
+        List<String> sizes= new ArrayList<>();
+        List<StorageBarrelInterface> BarrelSet = new ArrayList<>(barrelsMap.values());
+        
+        for (StorageBarrelInterface b : BarrelSet) {
+            try {
+                sizes.add( String.valueOf(b.returnSize()) );
+                System.out.println("O tamanho do barrel é " + b.returnSize());
+            } catch (Exception e) {
+                System.out.println("Erro a obter o tamanho do barrel");
+            }        
+        }
+
+        var.put("sizes", sizes);
         var.put("topTen", topTen);
         List<String> exectime= new ArrayList<>();
         exectime.add(String.valueOf(Time));
@@ -398,8 +423,16 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     public StorageBarrelInterface getBarrel(){ //fixando o numero de barrels à quantidade de barrels na lista
         List<StorageBarrelInterface> values = new ArrayList<>(barrelsMap.values());
         if (values.isEmpty()) return null;
-        Random r= new Random();
-        return values.get(r.nextInt(values.size()));
+
+        if(getBarrelNum()==1){
+            return values.get(0);
+        }
+
+        //Load balance
+        StorageBarrelInterface resultado= values.get((prevBarrel+1)%values.size());
+        prevBarrel= (prevBarrel+1)%values.size();
+
+        return resultado ;
     }
 
 //End o interface implementation

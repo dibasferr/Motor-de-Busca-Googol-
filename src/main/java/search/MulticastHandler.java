@@ -54,8 +54,8 @@ public class MulticastHandler extends Thread {
             // Carrega o arquivo .properties
             config.load(input);
             // Lê as propriedades
-            endereço = config.getProperty("rmi.host2");//pega da sua maquina
-            porta = config.getProperty("rmi.port2");
+            endereço = config.getProperty("rmi.host1");//pega da sua maquina
+            porta = config.getProperty("rmi.port1");
         }catch(IOException e) {
             System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
         }
@@ -97,7 +97,12 @@ public class MulticastHandler extends Thread {
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 socket.receive(packet);
                 System.out.println("Recebi uma mensagem");
-            
+                
+                System.out.println("Inet address:");
+                System.out.println(InetAddress.getByName(endereço));
+                System.out.println("Packet Address:");
+                System.out.println(packet.getAddress());
+                
                 if (packet.getAddress().equals(InetAddress.getByName(endereço))) {//Deixar a mensagem ack vir do outro barrel
                     continue;
                 }
@@ -142,6 +147,8 @@ public class MulticastHandler extends Thread {
                             System.out.println(packet.getAddress());
                             socket.send(ackpack);
 
+                            System.out.println("\nEnviei ACK");
+
                             barrel.addWordToStructure(words, url, (PageInfo)b, (String)c, -1);
                             System.out.println("Apos receber na minha thread adicionei à minha estrutura de words");
                         } else {
@@ -168,6 +175,8 @@ public class MulticastHandler extends Thread {
                             DatagramPacket ackpack = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
                             socket.send(ackpack);
 
+                            System.out.println("\nEnviei ACK");
+                            
                             barrel.addLinks(fromUrl, toUrls,(String)c, -1); //Atualizacao de barrel
                             System.out.println("Apos receber na minha thread adicionei à minha estrutura de links");
                         } else {
