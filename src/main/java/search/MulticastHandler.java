@@ -149,7 +149,10 @@ public class MulticastHandler extends Thread {
 
                             System.out.println("\nEnviei ACK");
 
-                            barrel.addWordToStructure(words, url, (PageInfo)b, (String)c, -1);
+                            new Thread(() -> {
+                                barrel.addWordToStructure(words, url, (PageInfo) b, (String) c, -1);
+                            }).start();
+
                             System.out.println("Apos receber na minha thread adicionei à minha estrutura de words");
                         } else {
                             System.err.println("Tipos incompatíveis para 'words' ou 'url'");
@@ -176,8 +179,11 @@ public class MulticastHandler extends Thread {
                             socket.send(ackpack);
 
                             System.out.println("\nEnviei ACK");
-                            
-                            barrel.addLinks(fromUrl, toUrls,(String)c, -1); //Atualizacao de barrel
+
+                            new Thread(() -> {
+                                barrel.addLinks(fromUrl, toUrls,(String)c, -1); //Atualizacao de barrel
+                            }).start();
+
                             System.out.println("Apos receber na minha thread adicionei à minha estrutura de links");
                         } else {
                             System.err.println("Tipos incompatíveis para 'fromUrl' ou 'toUrls'");

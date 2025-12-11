@@ -70,8 +70,8 @@ public class Crawler {
             System.out.printf("Eu sou %s\n", crawler_name);
             int ref=0;
             try {
-                StorageBarrelInterface stub_barrel= stub.getBarrel(); //Todos os crawlers comunicam com esse barrel: ERRADO
-                        //Aqui tem que ser um storage aleatorio ou o contrario do ultimo utilizado
+                StorageBarrelInterface stub_barrel= stub.getBarrel(); 
+
                 while(url!=null){
                     try{
                         stub_barrel= stub.getBarrel();
@@ -100,7 +100,6 @@ public class Crawler {
                         String texto = doc.body().text();
                         String citacao = texto.length() > 150 ? texto.substring(0, 150) + "..." : texto;
 
-                        //Fazer uma thread para essa adicionar isso 
                         ref=stub_barrel.addWordToStructure(words_indexed, url, new PageInfo(url, titulo, citacao),crawler_name, ref);
                         ref++;
                         System.out.printf("A referencia atual é %d\n",ref);
