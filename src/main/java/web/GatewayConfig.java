@@ -22,7 +22,16 @@ public class GatewayConfig {
     private String endereço_gateway=null;
 	private String porta=null;
     
-
+	/**
+     * Cria e fornece um stub RMI para o Gateway, disponível ao nível da aplicação.
+     *
+     * <p>O método lê o ficheiro de propriedades, obtém o endereço e a porta do servidor
+     * RMI e realiza o lookup do objeto remoto {@link GatewayInterface}. O bean gerado
+     * é application-scoped, garantindo que existe apenas um stub para toda a aplicação.</p>
+     *
+     * @return instância remota de {@link GatewayInterface}, ou null caso ocorra erro
+	 * @author Lorando Ca, Pedro Ferreira
+     */
     @Bean(name = "applicationScopedGatewayGenerator")
     @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
     public GatewayInterface gatewayConfig() {

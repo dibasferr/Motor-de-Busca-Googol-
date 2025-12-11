@@ -10,6 +10,26 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+
+/**
+ * Configuração do WebSocket usando STOMP para comunicação em tempo real entre
+ * o servidor e clientes web.
+ *
+ * <p>Esta configuração habilita um broker simples para tópicos, define o prefixo
+ * das mensagens de aplicação, registra endpoints STOMP e escuta eventos de conexão
+ * e desconexão de sessões WebSocket.</p>
+ *
+ * <p>Funcionalidades principais:
+ * <ul>
+ *   <li>Configura um broker simples para mensagens publicadas em "/topic".</li>
+ *   <li>Define o prefixo de destino de mensagens enviadas do cliente para o servidor como "/app".</li>
+ *   <li>Registra o endpoint "/my-websocket" para clientes se conectarem via STOMP.</li>
+ *   <li>Escuta eventos de conexão/desconexão de sessões e loga mensagens no console.</li>
+ * </ul>
+ * </p>
+ *
+ * @author Lorando Ca, Pedro Ferreira
+ */
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {

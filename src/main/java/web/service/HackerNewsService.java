@@ -1,10 +1,18 @@
-package web;
+package web.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
+/**
+ * Serviço que consulta a API do Hacker News para obter top stories.
+ *
+ * <p>Permite filtrar as top stories de acordo com termos fornecidos pelo utilizador
+ * e retornar apenas URLs externas associadas às histórias que correspondam aos termos.</p>
+ *
+ * @author Lorando Ca, Pedro Ferreira
+ */
 @Service
 public class HackerNewsService {
 

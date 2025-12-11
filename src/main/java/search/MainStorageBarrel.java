@@ -25,27 +25,27 @@ import java.rmi.registry.LocateRegistry;
 /**
  * Implementação do Storage Barrel principal do sistema "Googol".
  *
- * <p>O Storage Barrel é responsável por armazenar o índice invertido, as relações de links entre
- * páginas (backlinks), informações de páginas (meta-dados) e métricas de popularidade das URLs.
- * Os barrels comunicam entre si através de multicast UDP para propagar atualizações (implementação
- * simples de replicação).
+ * <p>O Storage Barrel é responsável por armazenar o índice invertido, as relações de links
+ * (backlinks), meta-informação de páginas ({@link PageInfo}) e métricas de popularidade das URLs.
+ * Os barrels participam de replicação simples via multicast UDP para propagar updates entre réplicas.
  *
- * <p>Funcionalidades principais:
+ * <p><b>Funcionalidades principais:</b>
  * <ul>
- *   <li>Armazenar índice invertido: palavra -> conjunto de URLs;</li>
- *   <li>Armazenar mapeamento de links (fromUrl -> toUrls) e calcular popularidade (in-degree);</li>
- *   <li>Receber updates de crawlers e multicast para replicação;</li>
- *   <li>Responder a pesquisas (returnSearchResult) retornando {@link PageInfo} ordenados por popularidade;</li>
- *   <li>Persistência (esqueleto) e sincronização inicial com um barrel activo.</li>
+ *   <li>Índice invertido: palavra → conjunto de URLs;</li>
+ *   <li>Mapeamento de links (fromUrl → toUrls) e cálculo de popularidade (in-degree);</li>
+ *   <li>Receção de updates de crawlers e propagação por multicast (fragmentação em chunks);</li>
+ *   <li>Resposta a pesquisas distribuídas através de {@link #returnSearchResult(List)};</li>
+ *   <li>Persistência local (serialização binária) e sincronização inicial através de snapshot da Gateway.</li>
  * </ul>
  *
- * <p><b>Notas sobre fiabilidade:</b> a replicação é feita por multicast com ACKs; esta abordagem
- * fornece uma forma básica de propagação, mas não garante entrega a todas as réplicas em cenários
- * com perdas de rede. Para maior robustez, foi implementado uma coleta de ACKs.
+ * <p><b>Notas sobre fiabilidade e escalabilidade:</b>
+ * A replicação por multicast é uma solução simples e leve, mas não garante entrega fiável a todas as réplicas
+ * em redes com perda de pacotes. Actualmente existe uma lógica de reenvio com timeout e espera por ACKs,
+ * e deduplicação de updates com referências sequenciais vindas dos crawlers.
  *
- * @apiNote O construtor tenta obter um snapshot inicial a partir de um barrel activo via {@code gateway.getBarrel().reboot()}.
- * @author Pedro Ferreira, Lorando Ca
- * @version 1
+ * @author Lorando Ca, Pedro Ferreira
+ * @see BarrelSnapshot
+ * @see StorageBarrelInterface
  */
 
 public class MainStorageBarrel extends UnicastRemoteObject implements StorageBarrelInterface{
@@ -83,19 +83,32 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      * Chave: URL; Valor: {@link PageInfo}
      */
     private Map<String,PageInfo> pageInfo;
+
     /**
-     * Construtor: inicializa estruturas e tenta sincronizar o índice a partir de um barrel activo.
-     *
-     * @throws RemoteException Se ocorrer um erro na exportação RMI.
-     * @apiNote A ligação ao gateway está hard-coded para "rmi://192.168.1.197:1099/Gateway" neste exemplo.
+     * Endereço & porta RMI lidos de config.properties (populados no main/constructor).
+     * <p>São {@code static} por comodidade na inicialização.
      */
     static String endereço=null;
     static String porta=null;
     static Properties config = new Properties();
 
+    /** Nome do ficheiro usado para persistência binária local do barrel. */
     String fileName = "./fileBarrel.ser"; // Nome do arquivo binário para guardar e atualizar info de barrels
 
+    /**
+     * Contador usado para decidir quando persistir o estado em disco.
+     * Estratégia actual: guardar periodicamente após acumular certas operações.
+     */
     int counter = 0; // Contador para gerenciar quando guardar info no ficheiro binário
+
+    /**
+     * Construtor: inicializa estruturas internas e tenta sincronizar o índice a partir
+     * de um barrel activo obtido via Gateway. Se não houver barrel activo, tenta carregar
+     * um ficheiro local de recuperação.
+     *
+     * @throws RemoteException Se ocorrer um erro durante a exportação RMI local.
+     * @apiNote O endereço RMI é lido de {@code config.properties}; adapta conforme necessário.
+     */
 
     //@SuppressWarnings("unchecked")
     public MainStorageBarrel() throws RemoteException {
@@ -149,18 +162,20 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         }
     }
 
+
     /**
-     * Atualiza o índice invertido com o conjunto de palavras encontradas numa página.
+     * Actualiza o índice invertido com as palavras extraídas de uma página.
      *
-     * @param words Conjunto de palavras extraídas da página.
-     * @param url URL da página indexada.
-     * @param page Meta-informação da página ({@link PageInfo}).
-     * @param Crawler Identificador do crawler que enviou os dados.
-     * @param ref Número de referência sequencial vindo do crawler (usado para filtrar duplicados).
-     * @return Novo valor de referência sugerido para o crawler (ref + número de chunks enviados).
+     * <p>Se {@code ref == -1} o update é considerado proveniente da replicação (multicast)
+     * e NÃO será retransmitido. Caso contrário, o update é fragmentado em chunks e enviado
+     * por multicast para replicação entre barrels (quando houver mais do que um barrel).
      *
-     * @apiNote Se {@code ref == -1} a operação é considerada proveniente de replicação (multicast) e não é retransmitida.
-     *           Quando há múltiplos barrels, os updates são fragmentados em chunks e enviados por multicast para replicação.
+     * @param words  conjunto de palavras extraídas da página.
+     * @param url    URL da página indexada.
+     * @param page   meta-informação da página; pode ser {@code null}.
+     * @param Crawler identificador do crawler emissor.
+     * @param ref    número de referência sequencial (usado para filtragem de duplicados).
+     * @return novo valor de referência sugerido para o crawler (geralmente {@code ref + countChunks}).
      */
     @Override
     public synchronized int addWordToStructure(Set<String> words, String url,PageInfo page, String Crawler, int ref) {
@@ -219,6 +234,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         return ref + count;
     }
 
+
     /**
      * Atualiza a estrutura de links (backlinks) para uma página de origem.
      *
@@ -233,8 +249,6 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         int count=0;
         if(last_sender.containsKey(Crawler) && (last_sender.get(Crawler)>=ref) && (ref!=-1)) return ref;
         
-        
-
         if(ref!=-1){
             try {
                 if( gateway.getBarrelNum() > 1){
@@ -269,6 +283,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
 
         return ref+count;
     }
+
 
     /**
      * Executa uma pesquisa por um conjunto de palavras e devolve a lista de {@code PageInfo}
@@ -320,6 +335,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         
     }
 
+
     /**
      * Pesquisa inversa: devolve o conjunto de páginas que apontam para a URL especificada.
      *
@@ -340,6 +356,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         });
         return links;
     }
+
     
     /**
      * Envia um update contendo palavras e meta-informação da página para o grupo multicast.
@@ -386,14 +403,16 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         }
     }
 
+
     /**
-     * Envia o pacote multicast e espera por um ACK; em caso de timeout, reenvia.
+     * Envia o pacote multicast e aguarda por um ACK; em caso de timeout, tenta reenviar
+     * até um limite de tentativas.
      *
-     * <p>Esta rotina tenta garantir que pelo menos um receptor reconheceu o pacote. Não existe
-     * actualmente uma lógica de recolha de ACKs de todas as réplicas.
+     * <p>Nota: a implementação actual tenta garantir que pelo menos um receptor ACK-ou
+     * o pacote; não existe uma recolha de ACKs por todas as réplicas.
      *
-     * @param packet Pacote multicast a enviar.
-     * @param socket Socket multicast usado para envio.
+     * @param packet pacote multicast a enviar.
+     * @param socket socket multicast usado para envio/recepção de ACK.
      */
     public void envio(DatagramPacket packet, MulticastSocket socket){ //metodo auxiliar
         System.out.println("SENT\n\n");
@@ -405,16 +424,18 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
 
                 /*
                 List<StorageBarrelInterface> aux= gateway.getBarrels();
-                 
                 for (StorageBarrelInterface i:aux) {
                     try {
                         i.teste();
-                    } catch (java.rmi.ConnectException e) {
+                    } catch (java.rmi.ConnectException | java.rmi.NoSuchObjectException e) {
                         gateway.removeBarrel(i);
+                    } catch (Exception e) {
+                        // NÃO remover, porque pode ser apenas overload
+                        System.err.println("Barrel lento mas ainda vivo: " + e);
+                    }   
                     } catch (Exception e){
                         System.out.println("Lento mas vivo");
                     }
-                         
                 }*/
 
                 if(gateway.getBarrelNum()==1) break;
@@ -432,7 +453,6 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
                         break;
                     }
                 }
-            
             } catch (SocketTimeoutException e) {
                 counter--;
                 System.out.println("TimeOut de socket de envio multicast no MainStorage");
@@ -440,9 +460,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             }catch(Exception e){
                 e.printStackTrace();
             }
-            
         }
-
     }
 
     /**
@@ -452,7 +470,6 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      * @param toUrls  Conjunto de URLs de destino.
      * @param Crawler Identificador do crawler emissor.
      * @param ref     Número de referência para filtragem de duplicados.
-     * @apiNote O TTL e NetworkInterface estão fixos; adaptar para o teu ambiente de rede.
      */
     //Atualizar relacoes de Urls
     public void multicast(String fromUrl, Set<String> toUrls, String Crawler, int ref) {
@@ -494,13 +511,13 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         }
     }
 
+
     /**
-     * Fornece um snapshot do índice local (apenas o índice invertido palavra->URLs).
+     * Fornece um snapshot do estado local para permitir sincronização inicial de novos barrels.
      *
-     * @return Mapa do índice invertido usado para sincronização inicial de novos barrels.
-     * @throws RemoteException Se ocorrer um erro remoto.
-     * @apiNote Este método devolve apenas {@code index}. Em versão melhorada, deveria devolver
-     *           também {@code linkPages}, {@code urlPopularity} e {@code pageInfo}.
+     * @return {@link BarrelSnapshot} contendo índices e meta-informação.
+     * @throws RemoteException se ocorrer erro remoto.
+     * @apiNote Actualmente inclui {@code index}, {@code linkPages}, {@code urlPopularity} e {@code pageInfo}.
      */
     @Override
     public BarrelSnapshot reboot() throws RemoteException {
@@ -512,6 +529,13 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         return snap;
     }
 
+
+    /**
+     * Persiste o estado do barrel em formato binário (serialização).
+     *
+     * @param nomeFicheiro caminho do ficheiro para gravar.
+     * @throws RemoteException conforme assinatura RMI.
+     */
     @Override
     public synchronized void guardarBarrelInfoBinario(String nomeFicheiro) throws RemoteException{
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(nomeFicheiro))) {
@@ -526,6 +550,16 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         }
     }
 
+
+    /**
+     * Carrega estado do barrel a partir de um ficheiro binário previamente gerado.
+     *
+     * <p>O método espera quatro objetos serializados na ordem:
+     * {@code index}, {@code linkPages}, {@code urlPopularity}, {@code pageInfo}.
+     *
+     * @param nomeFicheiro caminho do ficheiro a ler.
+     * @throws RemoteException conforme assinatura RMI.
+     */
     @Override
     public synchronized void carregarBarrelInfoBinario(String nomeFicheiro) throws RemoteException{
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(nomeFicheiro))) {
@@ -581,39 +615,58 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         }
     }
 
+
     /**
-     * Método principal que arrancará o StorageBarrel:
-     * <ul>
-     *   <li>Configura a propriedade RMI hostname;</li>
-     *   <li>Cria a instância do barrel;</li>
-     *   <li>Regista o barrel na Gateway e faz bind no RMI registry;</li>
-     *   <li>Inicia o thread {@link MulticastHandler} que processará updates vindos por multicast.</li>
-     * </ul>
+     * Método de teste/health-check remoto (utilizado pelo gateway para verificar se o barrel está vivo).
+     *
+     * @throws RemoteException conforme assinatura RMI.
+     */
+    @Override
+    public void teste() throws RemoteException {
+        return;
+    }
+
+    
+    /**
+     * Retorna o número de entradas distintas no índice (n.º de palavras indexadas).
+     *
+     * @return tamanho do índice (n.º de palavras).
+     * @throws RemoteException conforme assinatura RMI.
+     */
+    @Override
+    public int returnSize() throws RemoteException {
+        return index.keySet().size();
+    }
+
+
+    /**
+     * Inicia o StorageBarrel:
+     * <ol>
+     *   <li>Lê configuração RMI;</li>
+     *   <li>Cria instância do barrel;</li>
+     *   <li>Submete-se à Gateway e faz bind no RMI registry;</li>
+     *   <li>Inicia o handler de multicast para processar updates recebidos.</li>
+     * </ol>
      *
      * @param args argumentos de linha de comando (não utilizados).
      */
     public static void main(String[] args) {
-
         //Setup
-
         try (FileInputStream input = new FileInputStream("config.properties")) {
             // Carrega o arquivo .properties
             config.load(input);
             // Lê as propriedades
-            endereço = config.getProperty("rmi.host1");//pega da sua maquina
-            porta = config.getProperty("rmi.port1");
+            endereço = config.getProperty("rmi.host2");//pega da sua maquina
+            porta = config.getProperty("rmi.port2");
         }catch(IOException e) {
             System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
         }
-        
-
 
         try{
-            LocateRegistry.createRegistry(1099);
+            //LocateRegistry.createRegistry(1099);
             System.out.println("RMI registry iniciado na porta 1099");
             System.setProperty("java.rmi.server.hostname", endereço);
             MainStorageBarrel barrel = new MainStorageBarrel();
-
 
             nome= gateway.subscribe(barrel);
             
@@ -621,8 +674,6 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
 
             Naming.rebind(nome, barrel);
            
-
-
             MulticastHandler t= new MulticastHandler(barrel);
             t.start();
             }
@@ -630,15 +681,4 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
                 e.printStackTrace();
             }
     }
-
-    @Override
-    public void teste() throws RemoteException {
-        return;
-    }
-
-    @Override
-    public int returnSize() throws RemoteException {
-        return index.keySet().size();
-    }
 }
-
