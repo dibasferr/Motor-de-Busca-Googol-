@@ -23,7 +23,7 @@ import java.util.Set;
  * {@link MainStorageBarrel#addLinks} para aplicar a alteração localmente.
  *
  * @apiNote O código assume que a interface de rede está em 192.168.1.197; tornar configurável é recomendado.
- * @author Pedro Ferreira, Lorando Ca
+ * @author Lorando Ca, Pedro Ferreira
  */
 
 public class MulticastHandler extends Thread {
@@ -35,13 +35,16 @@ public class MulticastHandler extends Thread {
     NetworkInterface netIf ;
     SocketAddress groupSockAddr ;
     MainStorageBarrel barrel;
-    /**
-     * Construtor: configura socket multicast e junta ao grupo.
-     *
-     * @param barrel Referência ao barrel local que irá aplicar os updates.
-     */
     String endereço;
     String porta;
+
+    /**
+     * Constrói o handler multicast, configurando o socket, a interface de rede e
+     * juntando-se ao grupo multicast. Lê as configurações necessárias do ficheiro
+     * config.properties.
+     *
+     * @param barrel Instância local onde as atualizações recebidas serão aplicadas.
+     */
     public MulticastHandler(MainStorageBarrel barrel){
         this.barrel= barrel;
         // TODO Auto-generated method stub
@@ -125,13 +128,9 @@ public class MulticastHandler extends Thread {
     
                     // Caso 1: contém "words" e "url"
                     if (map.containsKey("words") && map.containsKey("url")) {
-                      
                         Object c= map.get("Crawler");
-                        
-                        
                         Object w = map.get("words");
                         Object u = map.get("url");
-
                         Object b= map.get("pages");
     
                         if (w instanceof Set<?> && u instanceof String) {
@@ -197,7 +196,5 @@ public class MulticastHandler extends Thread {
                 e.printStackTrace();
             }
         }
-            
-        
     }
 }

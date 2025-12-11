@@ -6,6 +6,7 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+
 /**
  * Implementação do cliente para o sistema distribuído.
  * 
@@ -16,7 +17,7 @@ import java.util.*;
  * <p>O cliente também subscreve atualizações periódicas de estatísticas
  * enviadas pelo gateway.
  * 
- * @author Pedro Ferreira, Lorando Ca
+ * @author Lorando Ca, Pedro Ferreira
  */
 public class ClientImp extends UnicastRemoteObject implements ClientInterface {
         /** Lista das 10 palavras mais pesquisadas. */
@@ -39,6 +40,7 @@ public class ClientImp extends UnicastRemoteObject implements ClientInterface {
          */
         ClientImp() throws RemoteException {super();}
          
+        
         /**
          * Atualiza as estatísticas enviadas periodicamente pelo Gateway.
          *
@@ -46,7 +48,6 @@ public class ClientImp extends UnicastRemoteObject implements ClientInterface {
          * @param BarrelsNamesUpdate Lista com os nomes dos Barrels ativos.
          * @param searchDurUpdate Tempo médio de pesquisa atualizado.
          */
-    
         @Override
         public void updateStatistics(List<String> topTenUpdate, List<String> BarrelsNamesUpdate, long searchDurUpdate){//falta verificar barrels ativos e o tempo medio de pesquisa
 

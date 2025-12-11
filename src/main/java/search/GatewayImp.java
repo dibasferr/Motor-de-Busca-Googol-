@@ -12,43 +12,55 @@ import java.rmi.registry.LocateRegistry;
 /**
  * Implementação da Gateway do sistema distribuído "Googol".
  *
- * <p>A Gateway atua como ponto de entrada e coordenação entre:
+ * <p>A Gateway funciona como ponto central de coordenação entre:
  * <ul>
- *   <li>Clientes: que efetuam pesquisas e recebem estatísticas via callback;</li>
- *   <li>Crawlers/Downloaders: que solicitam URLs a processar e submetem novos URLs;</li>
- *   <li>Storage Barrels: que armazenam o índice invertido e respondem a pesquisas.</li>
+ *     <li><b>Clientes</b>: executam pesquisas e recebem estatísticas via callback;</li>
+ *     <li><b>Crawlers/Downloaders</b>: obtêm URLs a processar e submetem novos URLs descobertos;</li>
+ *     <li><b>Storage Barrels</b>: mantêm o índice invertido e executam pesquisas distribuídas.</li>
+ *     <li><b>Interface Web</b>: recebe métricas em tempo real para exibição num painel.</li>
  * </ul>
  *
- * <p>Responsabilidades principais:
+ * <p><b>Principais responsabilidades:</b>
  * <ul>
- *   <li>Gerir a fila global de URLs a indexar (`URL_queue`) e o conjunto de URLs já visitados (`visited`);</li>
- *   <li>Distribuir carga de pesquisa entre Storage Barrels (round-robin);</li>
- *   <li>Executar callbacks para clientes subscritos com as pesquisas mais frequentes (top10);</li>
- *   <li>Efetuar failover na pesquisa caso um Barrel falhe, removendo-o da lista de barrels activos.</li>
+ *     <li>Gerir a fila global de URLs a serem processados;</li>
+ *     <li>Evitar duplicação via conjunto de URLs visitados;</li>
+ *     <li>Manter e monitorizar Storage Barrels activos (com deteção de falhas);</li>
+ *     <li>Realizar balanceamento de carga via round-robin;</li>
+ *     <li>Executar pesquisas distribuídas com failover automático;</li>
+ *     <li>Manter estatísticas globais (pesquisas mais frequentes, tempo médio, etc.);</li>
+ *     <li>Emitir callbacks para clientes subscritos e interface Web.</li>
  * </ul>
  *
- * <p><b>Notas sobre concorrência:</b> métodos que acedem a `URL_queue` e `visited` são {@code synchronized}
- * para proteger a integridade da fila em cenários com múltiplos crawlers concorrentes.
- * 
- * @author Pedro Ferreira, Lorando Ca
+ * <p><b>Concorrência:</b> Métodos que manipulam {@code URL_queue}, {@code visited}
+ * e outros recursos não-thread-safe utilizam {@code synchronized} para garantir
+ * exclusão mútua em ambientes com múltiplos crawlers ou barrels concorrentes.
+ *
+ * @author Lorando Ca, Pedro Ferreira
  * @see StorageBarrelInterface
- * @see Client_interface
+ * @see ClientInterface
+ * @see WebInterface
  */
 
 public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
+    /** Referência para o servidor Web. */
     WebInterface web = null;
 
     /**
-     * Fila de URLs a processar por Crawlers.
-     * <p>
-     * Invariants:
-     * - URLs duplicados são evitados através de verificação em {@link #addURL(String)}.
+     * Fila global de URLs a serem processados pelos Crawlers.
+     *
+     * <p><b>Invariantes:</b>
+     * <ul>
+     *     <li>Não contém URLs duplicados;</li>
+     *     <li>URLs já visitados não são reinseridos;</li>
+     *     <li>A sincronização é garantida pelos métodos que a manipulam.</li>
+     * </ul>
      */
 
     Queue<String> URL_queue= new LinkedList<>();
 
     /**
-     * Conjunto de URLs já visitados (para evitar re-indexação).
+     * Conjunto de URLs já visitados.
+     * <p>Evita reprocessamento e loop infinito na exploração do grafo Web.
      */
     Set <String> visited= new HashSet<>();
 
@@ -59,12 +71,19 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      */
     List<ClientInterface> clients= new ArrayList<>();//do callback to all the stored references
 
-    /** Map de barrels registados: nome -> stub (thread-safe) */
+    /**
+     * Mapa de Storage Barrels activos: Nome atribuído → Stub RMI.
+     * <p>Implementado com {@link ConcurrentHashMap} para segurança e performance.
+     */
     private final ConcurrentHashMap<String, StorageBarrelInterface> barrelsMap = new ConcurrentHashMap<>();
 
+    /** Soma acumulada do tempo de execução de todas as pesquisas. */
     long somaTempoExecucao=0;
+
+    /** Contador de pesquisas executadas. */
     int countPesquisas=0;
 
+    /** Índice usado em {@link #getBarrel()}. Identifica último barrel utilizado em uma pesquisa*/
     int prevBarrel= 0;
 
     /**
@@ -78,11 +97,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     int barrel_counter=1;
 
     /**
-     * Nome do cliente (uso experimental/no momento não usado de forma consistente).
-     */
-    String client_name= new String();
-
-    /**
      * Map que conta frequência de pesquisas (termo -> frequência).
      * <p>
      * Utilizado para compor o top10 de termos pesquisados.
@@ -90,16 +104,15 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     Map<String, Integer> searchFreq= new HashMap<>();
 
     /**
-     * Construtor padrão: inicializa a Gateway e exporta o objecto RMI.
+     * Construtor padrão.
      *
-     * @throws RemoteException Se ocorrer um erro durante a exportação RMI.
+     * @throws RemoteException caso ocorra erro ao exportar objecto RMI.
      */
     public GatewayImp() throws RemoteException {super();
     }
 
     /**
      * Retorna o próximo URL da fila de trabalho para ser processado por um Crawler.
-     * O URL é marcado como visitado antes de ser devolvido, evitando reprocessamento.
      *
      * @return Próximo URL a processar, ou {@code null} se a fila estiver vazia.
      * @apiNote O método é {@code synchronized} para garantir exclusão mútua entre múltiplos crawlers concorrentes.
@@ -146,20 +159,20 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     }
 
     /**
-     * Executa uma pesquisa por um conjunto de palavras (termo livre possivelmente com espaços).
-     * <p>
-     * O método:
+     * Executa uma pesquisa distribuída por palavras.
+     *
+     * <p>Fluxo:
      * <ol>
-     *   <li>Separa a query em palavras;</li>
-     *   <li>Selecciona um Storage Barrel activo (round-robin) para delegar a pesquisa;</li>
-     *   <li>Em caso de falha de conexão com o barrel seleccionado, remove-o da lista e tenta outro;</li>
-     *   <li>Atualiza as métricas de pesquisa (searchFreq) e dispara o callback para os clientes subscritos.</li>
+     *     <li>Divide a query em palavras;</li>
+     *     <li>Faz load balancing para escolher barrel a utilizar;</li>
+     *     <li>Em caso de falha, remove o barrel e tenta outro (failover);</li>
+     *     <li>Actualiza métricas locais;</li>
+     *     <li>Dispara callback para clientes e interface Web.</li>
      * </ol>
      *
-     * @param word String com a query (um ou mais termos).
-     * @return Lista de URLs ordenada por relevância (implementação actual: ordena por popularidade/urlPopularity).
-     * @apiNote A selecção round-robin é feita incrementando {@code prev_barrel} e tomando módulo por {@code barrels.size()}.
-     * @throws RemoteException Exceções remotas propagadas durante a chamada ao barrel.
+     * @param word string com um ou mais termos de pesquisa.
+     * @return lista ordenada de {@link PageInfo}.
+     * @throws RemoteException propagado caso ocorra erro RMI.
      */
     @Override
     public List<PageInfo> pesquisa_word(String word) throws RemoteException{
@@ -224,12 +237,13 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
 
 
     /**
-     * Dispara callbacks para todos os clientes subscritos enviando as pesquisas mais frequentes.
-     * <p>
-     * Para evitar a modificação concorrente da lista durante iteração, usa-se um {@code Iterator}
-     * e remove-se qualquer cliente que gere uma {@code ConnectException} ou {@code RemoteException}.
+     * Envia estatísticas actualizadas para:
+     * <ul>
+     *     <li>Clientes subscritos;</li>
+     *     <li>Interface Web.</li>
+     * </ul>
      *
-     * @apiNote O método assume que {@link #searchFreq} está ordenado por frequência (ordenação aplicada em {@link #pesquisa_word(String)}).
+     * <p>Remove automaticamente clientes com falha de conexão.</p>
      */
     @Override
     public void collback() {
@@ -281,6 +295,19 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     }
 
 
+    /**
+     * Atualiza o servidor Web com:
+     * <ul>
+     *     <li>Top 10 pesquisas;</li>
+     *     <li>Lista de barrels activos;</li>
+     *     <li>Tamanhos dos indexes;</li>
+     *     <li>Tempo médio de execução.</li>
+     * </ul>
+     *
+     * @param topTen lista das top 10 pesquisas.
+     * @param barrels nomes dos barrels activos.
+     * @param Time tempo médio.
+     */
     public void updateWeb(List<String> topTen, List<String> barrels, double Time){
 
         Map<String, List<String>> var = new HashMap<>();
@@ -311,6 +338,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         }
         
     }
+
 
     /**
      * Retorna um resumo de estatísticas do sistema (API prevista).
@@ -381,6 +409,13 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     }
 
 
+    /**
+     * Regista a interface Web e devolve imediatamente o estado atual
+     * (barrels, top 10, tamanhos, tempo médio).
+     *
+     * @param c interface Web.
+     * @return mapa contendo estatísticas actuais.
+     */
     @Override
     public Map<String, List<String>> subscribe(WebInterface c) throws RemoteException {
         
@@ -425,13 +460,9 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     }
 
     /**
-     * Selecciona um StorageBarrel activo para uso por Crawlers.
-     * <p>
-     * Implementação actual: selecciona aleatoriamente um barrel se existirem mais do que 1; retorna {@code null} se nenhum existir.
+     * Selecciona um Storage Barrel activo com estratégia round-robin.
      *
-     * @return Referência remota para um {@link StorageBarrelInterface} ou {@code null} se a lista estiver vazia.
-     * @apiNote <b>BUG conhecido:</b> a expressão {@code r.nextInt(1)} devolve sempre 0 — deve ser substituída por {@code r.nextInt(barrels.size())}
-     *           ou idealmente por um mecanismo thread-safe round-robin (usar {@code AtomicInteger}).
+     * @return barrel activo ou {@code null} se nenhum existir.
      */
     @Override
     public StorageBarrelInterface getBarrel(){ //fixando o numero de barrels à quantidade de barrels na lista
@@ -449,13 +480,73 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         return resultado ;
     }
 
+
+    /**
+     * Lista os nomes de todos os barrels activos, removendo aqueles que falharem durante o teste.
+     *
+     * @return lista de nomes de barrels activos.
+     */
+    @Override
+    public synchronized List<String> getBarrelsNames() throws RemoteException {
+        Iterator<Map.Entry<String, StorageBarrelInterface>> it = barrelsMap.entrySet().iterator();
+        while(it.hasNext()) {
+            Map.Entry<String, StorageBarrelInterface> entry = it.next();
+            try {
+                entry.getValue().teste(); // método RMI leve só pra testar se tá vivo
+            } catch(Exception e) {
+                it.remove();
+                System.out.println("Removed dead barrel: " + entry.getKey());
+            }
+        }
+
+        return new ArrayList<>(barrelsMap.keySet());
+    }
+
+
+    /**
+     * Remove explicitamente um barrel do sistema.
+     *
+     * @param c stub remoto do barrel a remover.
+     */
+    @Override
+    public void removeBarrel(StorageBarrelInterface c) throws RemoteException {
+        String keyToRemove = null;
+        for (Map.Entry<String, StorageBarrelInterface> e : barrelsMap.entrySet()) {
+            if (e.getValue().equals(c)) {
+                keyToRemove = e.getKey();
+                break;
+            }
+        }
+        if (keyToRemove != null) {
+            barrelsMap.remove(keyToRemove);
+            System.out.println("Removed barrel : " + keyToRemove);
+        }
+        System.out.println("aquiiii");
+        this.collback();
+    }
+
+    /**
+     * @return lista dos barrels actualmente registados.
+     */
+    @Override
+    public List<StorageBarrelInterface> getBarrels() throws RemoteException {
+        return new ArrayList<>(barrelsMap.values());
+    }
+
+    /**
+     * Marca um URL como visitado.
+     *
+     * @param url URL a marcar.
+     */
+    @Override
+    public void addVisited(String url) throws RemoteException {
+        this.visited.add(url);
+    }
+
 //End o interface implementation
 //=======================================================================================================
     /**
-     * Método principal que inicia o registry RMI e faz o bind da Gateway no RMI registry.
-     * <p>
-     *
-     * @param args Argumentos de linha de comando (não utilizados).
+     * Método principal que inicia o Registry RMI e faz bind da Gateway.
      */
     public static void main(String[] args) {
         String endereço=null;
@@ -483,48 +574,4 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
             e.printStackTrace();
         }
     }
-
-    @Override
-    public synchronized List<String> getBarrelsNames() throws RemoteException {
-        Iterator<Map.Entry<String, StorageBarrelInterface>> it = barrelsMap.entrySet().iterator();
-        while(it.hasNext()) {
-            Map.Entry<String, StorageBarrelInterface> entry = it.next();
-            try {
-                entry.getValue().teste(); // método RMI leve só pra testar se tá vivo
-            } catch(Exception e) {
-                it.remove();
-                System.out.println("Removed dead barrel: " + entry.getKey());
-            }
-        }
-
-        return new ArrayList<>(barrelsMap.keySet());
-    }
-
-    @Override
-    public void removeBarrel(StorageBarrelInterface c) throws RemoteException {
-        String keyToRemove = null;
-        for (Map.Entry<String, StorageBarrelInterface> e : barrelsMap.entrySet()) {
-            if (e.getValue().equals(c)) {
-                keyToRemove = e.getKey();
-                break;
-            }
-        }
-        if (keyToRemove != null) {
-            barrelsMap.remove(keyToRemove);
-            System.out.println("Removed barrel : " + keyToRemove);
-        }
-        System.out.println("aquiiii");
-        this.collback();
-    }
-
-    @Override
-    public List<StorageBarrelInterface> getBarrels() throws RemoteException {
-        return new ArrayList<>(barrelsMap.values());
-    }
-
-    @Override
-    public void addVisited(String url) throws RemoteException {
-        this.visited.add(url);
-    }
-
 }

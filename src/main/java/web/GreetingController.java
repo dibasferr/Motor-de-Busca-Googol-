@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import web.service.chatCompletion;
+import web.service.HackerNewsService;
 
 @Controller
 public class GreetingController {
@@ -41,12 +42,22 @@ public class GreetingController {
 
 	private HackerNewsService hackerNewsService;
 
+
+	/**
+     * Controlador principal da camada web, responsável por lidar com as rotas,
+     * aceder ao Gateway RMI, executar pesquisas e coordenar integrações como
+     * HackerNews e chatCompletion.
+     */
 	public GreetingController(chatCompletion chat, HackerNewsService hackerNewsService){
 		this.chat= chat;
 		this.hackerNewsService = hackerNewsService;
 	}
 
 
+	/**
+     * Executado automaticamente após a construção do bean.
+     * Lê configurações, define o hostname RMI e faz a subscrição no Gateway.
+     */
     @PostConstruct
     public void setupSubscription() {
 				
@@ -61,7 +72,7 @@ public class GreetingController {
 			props.load(input);
 
 			// Lê as propriedades
-			endereco= props.getProperty("rmi.host1");
+			endereco= props.getProperty("rmi.host2");
 		
 			}catch(IOException e) {
 				System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
@@ -76,9 +87,12 @@ public class GreetingController {
     }
 
 	
-	
-
-
+	/**
+     * Verifica se a String recebida representa uma URL válida HTTP/HTTPS.
+     *
+     * @param wordToIndex texto inserido pelo utilizador
+     * @return true se for URL válida; false caso contrário
+     */
 	public boolean isValidURL(String wordToIndex) {
 		try {
 			URI uri = new URI(wordToIndex);
@@ -92,6 +106,9 @@ public class GreetingController {
 	}
 
 
+	/**
+     * Página inicial que mostra as estatísticas recebidas do Gateway.
+     */
     @GetMapping("/")
     public String redirect(Model model) {
         model.addAttribute("initialStatus",conector.statistics);
@@ -99,6 +116,10 @@ public class GreetingController {
     }
 
 
+	/**
+     * Abre o formulário de pesquisa, podendo ser pesquisa por palavra
+     * ou por URL, dependendo do parâmetro.
+     */
 	@GetMapping("/goToSearch")
 	public String goToSearch(Model model, @RequestParam(defaultValue = "false") boolean wichOne) {
 		model.addAttribute("searchForm", new SearchForm());
@@ -107,6 +128,11 @@ public class GreetingController {
 	}
 
 
+	/**
+     * Endpoint principal de pesquisa. Se for URL válida, pesquisa links associados.
+     * Caso contrário, pesquisa palavras no índice, obtém sugestões do chatCompletion
+     * e opcionalmente indexa conteúdo do HackerNews.
+     */
 	//Se for introduzida uma URL, faz-se a pesquisa das URLs ligadas a essa
 	@GetMapping("/Search")
 	public String Search(@ModelAttribute SearchForm searchForm, Model model) {
@@ -202,6 +228,9 @@ public class GreetingController {
 	}
 
 
+	/**
+     * Endpoint responsável por indexar diretamente uma URL fornecida pelo utilizador.
+     */
 	@GetMapping("/indexUrl")
 	public String indexUrl(@ModelAttribute SearchForm searchForm, Model model) {
 

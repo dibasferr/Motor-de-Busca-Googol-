@@ -31,8 +31,7 @@ import org.jsoup.select.Elements;
  * <p>O código também trata erros de conexão e tenta reconectar ao servidor RMI
  * quando necessário.</p>
  * 
- * @author Pedro Ferreira, Lorando Ca
- * @version 1.0
+ * @author Lorando Ca, Pedro Ferreira
  */
 public class Crawler {
     /**
