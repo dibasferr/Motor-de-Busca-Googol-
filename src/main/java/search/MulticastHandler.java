@@ -106,10 +106,11 @@ public class MulticastHandler extends Thread {
                 System.out.println("Packet Address:");
                 System.out.println(packet.getAddress());
                 
+                /*
                 if (packet.getAddress().equals(InetAddress.getByName(endereço))) {//Deixar a mensagem ack vir do outro barrel
                     continue;
                 }
-                
+                */
                 byte[] dados = packet.getData();
                 int length = packet.getLength();
                 //Enviar ACK 

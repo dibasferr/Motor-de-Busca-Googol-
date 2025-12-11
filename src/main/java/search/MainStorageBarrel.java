@@ -20,7 +20,6 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 
 /**
  * Implementação do Storage Barrel principal do sistema "Googol".
