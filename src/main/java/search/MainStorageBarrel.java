@@ -106,7 +106,6 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         pageInfo= new HashMap<>();
 
         String endereço=null;
-        String endereçoBarrel=null;
         String porta=null;
         Properties config = new Properties();
 
@@ -115,14 +114,12 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             config.load(input);
             // Lê as propriedades
             endereço = config.getProperty("rmi.host2");//pega da sua maquina
-            endereçoBarrel = config.getProperty("rmi.host1");//pega da sua maquina
             porta = config.getProperty("rmi.port2");
         }catch(IOException e) {
             System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
         }
 
         try {
-            System.setProperty("java.rmi.server.hostname", endereçoBarrel);
             gateway= (GatewayInterface)Naming.lookup(String.format("rmi://%s:%s/Gateway",endereço,porta));
             
             System.out.println("A pedir barrel ao gateway...");
@@ -406,20 +403,22 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
             try {
 
                 List<StorageBarrelInterface> aux= gateway.getBarrels();
-                
+                /* 
                 for (StorageBarrelInterface i:aux) {
                     try {
                         i.teste();
-                    } catch (java.rmi.ConnectException e) {
+                    } catch (java.rmi.ConnectException | java.rmi.NoSuchObjectException e) {
                         gateway.removeBarrel(i);
-                    }
-                         
-                }
+                    } catch (Exception e) {
+                        // NÃO remover, porque pode ser apenas overload
+                        System.err.println("Barrel lento mas ainda vivo: " + e);
+                    }   
+                }*/
 
                 if(gateway.getBarrelNum()==1) break;
                 socket.send(packet);
                 //Esperar ACK. Define um limite de espera para voltar a enviar XXXXXX
-                socket.setSoTimeout(2000);
+                socket.setSoTimeout(1000);
                 byte[] ackBuffer = new byte[256];
                 DatagramPacket ackPacket = new DatagramPacket(ackBuffer, ackBuffer.length);
                 socket.receive(ackPacket);

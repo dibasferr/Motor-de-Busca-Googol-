@@ -142,6 +142,8 @@ public class MulticastHandler extends Thread {
                             System.out.println(packet.getAddress());
                             socket.send(ackpack);
 
+                            System.out.println("\nENVIEI ACK\n");
+
                             barrel.addWordToStructure(words, url, (PageInfo)b, (String)c, -1);
                             System.out.println("Apos receber na minha thread adicionei à minha estrutura de words");
                         } else {
@@ -167,6 +169,8 @@ public class MulticastHandler extends Thread {
                             // Cria o pacote e envia
                             DatagramPacket ackpack = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
                             socket.send(ackpack);
+
+                            System.out.println("\nENVIEI ACK\n");
 
                             barrel.addLinks(fromUrl, toUrls,(String)c, -1); //Atualizacao de barrel
                             System.out.println("Apos receber na minha thread adicionei à minha estrutura de links");

@@ -62,6 +62,8 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     /** Map de barrels registados: nome -> stub (thread-safe) */
     private final ConcurrentHashMap<String, StorageBarrelInterface> barrelsMap = new ConcurrentHashMap<>();
 
+    int prevBarrel = 0;
+
     long somaTempoExecucao=0;
     int countPesquisas=0;
 
@@ -398,8 +400,16 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     public StorageBarrelInterface getBarrel(){ //fixando o numero de barrels à quantidade de barrels na lista
         List<StorageBarrelInterface> values = new ArrayList<>(barrelsMap.values());
         if (values.isEmpty()) return null;
-        Random r= new Random();
-        return values.get(r.nextInt(values.size()));
+
+        if(getBarrelNum()==1){
+            return values.get(0);
+        }
+        
+        //Load balance
+        StorageBarrelInterface resultado= values.get((prevBarrel+1)%values.size());
+        prevBarrel= (prevBarrel+1)%values.size();
+
+        return resultado ;
     }
 
 //End o interface implementation
