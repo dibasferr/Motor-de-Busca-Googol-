@@ -124,9 +124,9 @@ public class ClientImp extends UnicastRemoteObject implements ClientInterface {
                 // Carrega o arquivo .properties
                 config.load(input);
                 // Lê as propriedades
-                endereço = config.getProperty("rmi.host1");//endereços para a gateway é do host2
+                endereço = config.getProperty("rmi.host2");//endereços para a gateway é do host2
                 endereço_gateway= config.getProperty("rmi.host2");
-                porta = config.getProperty("rmi.port1");
+                porta = config.getProperty("rmi.port2");
             }catch(IOException e) {
                 System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
             }

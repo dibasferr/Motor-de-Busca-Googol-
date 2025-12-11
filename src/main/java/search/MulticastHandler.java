@@ -54,8 +54,8 @@ public class MulticastHandler extends Thread {
             // Carrega o arquivo .properties
             config.load(input);
             // Lê as propriedades
-            endereço = config.getProperty("rmi.host1");//pega da sua maquina
-            porta = config.getProperty("rmi.port1");
+            endereço = config.getProperty("rmi.host2");//pega da sua maquina
+            porta = config.getProperty("rmi.port2");
         }catch(IOException e) {
             System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
         }

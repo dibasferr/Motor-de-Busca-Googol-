@@ -307,6 +307,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
             web.update(var);
         } catch (Exception e) {
             System.out.println("Erro a fazer update no webServer");
+            e.printStackTrace();
         }
         
     }
