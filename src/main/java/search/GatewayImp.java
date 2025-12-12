@@ -339,22 +339,6 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
         
     }
 
-
-    /**
-     * Retorna um resumo de estatísticas do sistema (API prevista).
-     *
-     * @return {@code String} com dados de estatísticas.
-     */
-    @Override
-    public String statistics(){
-        List<String> chaves = new ArrayList<>(searchFreq.keySet());
-        
-        List<String> pesquisasComuns= new ArrayList<>();
-        for(int i=0; i<chaves.size();i++){
-            pesquisasComuns.add(chaves.get(i));
-        }
-        return null;
-    }
     
     /**
      * Pesquisa inversa: devolve as páginas que têm ligação para a URL especificada.

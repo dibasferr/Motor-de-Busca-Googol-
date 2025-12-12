@@ -1,4 +1,81 @@
-/* --- Estilos para a Lista de Top 10 --- */
+/* Body e fundo geral */
+body {
+  background-color: #121212;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+/* Container */
+.container {
+  background-color: #121212;
+}
+
+/* Header / Navbar */
+header, .nav, .nav-link {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+.nav-link.active {
+  background-color: #333333 !important;
+  color: #ffffff !important;
+}
+
+/* Tabelas */
+.table, .table-striped, .styled-table {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border-color: #333333;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #2a2a2a;
+}
+
+/* Inputs / Formulários */
+input, textarea, select, .form-control, .form-control-dark {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border: 1px solid #333333;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #555555;
+  box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+}
+
+/* Botões */
+.btn, .btn-outline-dark {
+  background-color: #333333;
+  color: #ffffff;
+  border: 1px solid #555555;
+}
+
+.btn:hover, .btn-outline-dark:hover {
+  background-color: #555555;
+  color: #ffffff;
+}
+
+/* Cards / containers menores */
+.card, .table-container {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border: 1px solid #333333;
+}
+
+/* Links */
+a, a:visited {
+  color: #4da3ff;
+}
+
+a:hover {
+  color: #a0cfff;
+}
+
+/* Textos e títulos */
+h1, h2, h3, h4, h5, h6, p, span {
+  color: #ffffff;
+}
 
 .top-ten-list {
     list-style: none; /* Remove os números de lista padrão */

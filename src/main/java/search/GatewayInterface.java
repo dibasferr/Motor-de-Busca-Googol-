@@ -17,8 +17,6 @@ public interface GatewayInterface extends Remote {
    
     public List<PageInfo> pesquisa_word(String word) throws RemoteException;
 
-    public String statistics() throws RemoteException;
-
     public String subscribe(ClientInterface c) throws RemoteException; 
 
     public String subscribe(StorageBarrelInterface c) throws RemoteException;

@@ -1,0 +1,144 @@
+.bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+@media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+    }
+}
+
+.b-example-divider {
+    width: 100%;
+    height: 3rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: solid rgba(255, 255, 255, 0.15);
+    border-width: 1px 0;
+    box-shadow:
+      inset 0 0.5em 1.5em rgba(255, 255, 255, 0.1),
+      inset 0 0.125em 0.5em rgba(255, 255, 255, 0.15);
+}
+
+.b-example-vr {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 100vh;
+}
+
+.bi {
+    vertical-align: -0.125em;
+    fill: currentColor;
+}
+
+.nav-scroller {
+    position: relative;
+    z-index: 2;
+    height: 2.75rem;
+    overflow-y: hidden;
+}
+
+.nav-scroller .nav {
+    display: flex;
+    flex-wrap: nowrap;
+    padding-bottom: 1rem;
+    margin-top: -1px;
+    overflow-x: auto;
+    text-align: center;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Botões primários */
+.btn-bd-primary {
+    --bd-violet-bg: #712cf9;
+    --bd-violet-rgb: 112.520718, 44.062154, 249.437846;
+    --bs-btn-font-weight: 600;
+    --bs-btn-color: var(--bs-white);
+    --bs-btn-bg: #333333;
+    --bs-btn-border-color: #555555;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: #555555;
+    --bs-btn-hover-border-color: #555555;
+    --bs-btn-focus-shadow-rgb: 112,44,249;
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: #444444;
+    --bs-btn-active-border-color: #444444;
+}
+
+.bd-mode-toggle {
+    z-index: 1500;
+}
+
+.bd-mode-toggle .bi {
+    width: 1em;
+    height: 1em;
+}
+
+.bd-mode-toggle .dropdown-menu .active .bi {
+    display: block !important;
+}
+
+/* --- Googol customization --- */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    height: 100vh;
+    background-color: #121212; /* fundo escuro */
+    padding-top: 100px;
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    color: #ffffff; /* texto claro */
+}
+
+/* Logo "Googol" com letras retas */
+.googol-logo {
+    font-size: 4rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Cores da logo ajustadas para contraste */
+.googol-logo span:nth-child(1) { color: #f54242; }  /* G */
+.googol-logo span:nth-child(2) { color: #a0a0a0; }  /* o */
+.googol-logo span:nth-child(3) { color: #ffffff; }  /* o */
+.googol-logo span:nth-child(4) { color: #6de907; }  /* g */
+.googol-logo span:nth-child(5) { color: #929937; }  /* o */
+.googol-logo span:nth-child(6) { color: #f0e907; }  /* l */
+
+/* Tabelas e containers */
+.table, .table-striped, .styled-table, .table-container {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border-color: #333333;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #2a2a2a;
+}
+
+/* Inputs / Formulários */
+input, textarea, select, .form-control, .form-control-dark {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #333333;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #555555;
+    box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+}
+
+/* Links */
+a, a:visited {
+    color: #4da3ff;
+}
+
+a:hover {
+    color: #a0cfff;
+}
