@@ -1,5 +1,3 @@
-mvn clean install
-
 echo =========================================
 echo   Gerando Javadoc via Maven...
 echo =========================================

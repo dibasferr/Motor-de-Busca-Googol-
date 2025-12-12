@@ -170,8 +170,6 @@ public class GreetingController {
 	
 				List<PageInfo> result = gateway_stub.pesquisa_word(wordToLook);
 
-
-
 				model.addAttribute("resultado", result);
 				// Para pegar o resultado da thread (bloqueia até terminar)
 				
@@ -189,7 +187,6 @@ public class GreetingController {
 				// Encerra o executor
 				executor.shutdown();
 						
-					
 				String confirmation= searchForm.getIndexHackerNews();
 				confirmation = confirmation.replace(",", "");
 
