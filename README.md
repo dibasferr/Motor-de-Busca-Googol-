@@ -73,6 +73,14 @@ Citação: This domain is for use in illustrative examples...
 
 ---
 
+## Como ativar a web Service?
+Nota: Antes, inicie os serviços da meta 1, os serviços de BackEnd.
+1. Execute o file ServingWeboContentApplication.java
+O serviço estará a rodar no localhost na porta 9090.
+
+## Como acessar tornar público o serviço?
+Utilizou-se tunnels integrado pela cloudflared.
+
 ## Créditos / Autores
 ```
 Pedro Ferreira - 2023112367 - uc2023112367@student.uc.pt  

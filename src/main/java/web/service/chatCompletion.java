@@ -40,7 +40,7 @@ public class chatCompletion implements chatCompletionInterface {
 							.build();
 
 			// start conversation with model
-			OllamaChatResult chatResult = ollama.chat(requestModel, null);
+			OllamaChatResult chatResult = ollama.chat(requestModel, null); // http://localhost:11434/api/chat
 
 			return  chatResult.getResponseModel().getMessage().getResponse();
 
