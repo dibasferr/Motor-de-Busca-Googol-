@@ -106,7 +106,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      * um ficheiro local de recuperação.
      *
      * @throws RemoteException Se ocorrer um erro durante a exportação RMI local.
-     * @apiNote O endereço RMI é lido de {@code config.properties}; adapta conforme necessário.
+     * @note O endereço RMI é lido de {@code config.properties}; adapta conforme necessário.
      */
 
     //@SuppressWarnings("unchecked")
@@ -300,7 +300,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      * @param words Lista de palavras a pesquisar; não deve ser {@code null}.
      * @return Lista de {@link PageInfo} correspondentes; lista vazia se nenhum resultado.
      * @throws RemoteException Repassa exceções remotas se ocorrerem problemas no RMI.
-     * @apiNote Se {@code pageInfo} não contiver meta-informação para uma URL, {@code null} pode ser adicionado
+     * @note Se {@code pageInfo} não contiver meta-informação para uma URL, {@code null} pode ser adicionado
      *           à lista resultante — idealmente, assegurar que {@code pageInfo} contém entradas para todas as URLs indexadas.
      */
     @Override
@@ -341,7 +341,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      * @param url URL alvo para a pesquisa de backlinks.
      * @return Conjunto de URLs que têm ligação para {@code url}; conjunto vazio se não existirem.
      * @throws RemoteException Se ocorrer um erro remoto durante a operação.
-     * @apiNote Esta operação itera sobre {@code linkPages} (complexidade O(N)); para grandes volumes recomenda-se
+     * @note Esta operação itera sobre {@code linkPages} (complexidade O(N)); para grandes volumes recomenda-se
      *           manter um índice inverso auxiliar (destino -> set[fromUrls]) para obter O(1) por consulta.
      */
     @Override
@@ -368,7 +368,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      * @param page    Informação da página (PageInfo) — pode ser {@code null}.
      * @param Crawler Identificador do crawler emissor.
      * @param ref     Número de referência sequencial associado ao chunk.
-     * @apiNote Configura {@code TimeToLive} e {@code NetworkInterface} para que o multicast funcione na LAN.
+     * @note Configura {@code TimeToLive} e {@code NetworkInterface} para que o multicast funcione na LAN.
      */
     //Atualizar index
     public void multicast(Set<String> words, String url,PageInfo page, String Crawler, int ref) {
@@ -516,7 +516,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
      *
      * @return {@link BarrelSnapshot} contendo índices e meta-informação.
      * @throws RemoteException se ocorrer erro remoto.
-     * @apiNote Actualmente inclui {@code index}, {@code linkPages}, {@code urlPopularity} e {@code pageInfo}.
+     * @note Actualmente inclui {@code index}, {@code linkPages}, {@code urlPopularity} e {@code pageInfo}.
      */
     @Override
     public BarrelSnapshot reboot() throws RemoteException {
@@ -625,7 +625,7 @@ public class MainStorageBarrel extends UnicastRemoteObject implements StorageBar
         return;
     }
 
-    
+
     /**
      * Retorna o número de entradas distintas no índice (n.º de palavras indexadas).
      *
