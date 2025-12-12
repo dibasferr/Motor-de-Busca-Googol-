@@ -67,7 +67,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
     /**
      * Lista de clientes subscritos para callback de estatísticas.
      * <p>
-     * Cada elemento é uma referência remota a {@link Client_interface}.
+     * Cada elemento é uma referência remota a {@link ClientInterface}.
      */
     List<ClientInterface> clients= new ArrayList<>();//do callback to all the stored references
 
@@ -115,7 +115,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      * Retorna o próximo URL da fila de trabalho para ser processado por um Crawler.
      *
      * @return Próximo URL a processar, ou {@code null} se a fila estiver vazia.
-     * @apiNote O método é {@code synchronized} para garantir exclusão mútua entre múltiplos crawlers concorrentes.
+     * @note O método é {@code synchronized} para garantir exclusão mútua entre múltiplos crawlers concorrentes.
      */
     @Override
     public synchronized String getURL(){
@@ -130,7 +130,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      *
      * @param new_URLs Lista de URLs a adicionar.
      * @return {@code null} (tipo Void por compatibilidade com RMI).
-     * @apiNote O método é {@code synchronized} para proteger a fila contra condições de corrida.
+     * @note O método é {@code synchronized} para proteger a fila contra condições de corrida.
      */
     @Override
     public synchronized Void addURLs(List<String> new_URLs) {
@@ -147,7 +147,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      *
      * @param new_URL URL a adicionar.
      * @return {@code null} (tipo Void por compatibilidade com RMI).
-     * @apiNote O método é {@code synchronized} para evitar condições de corrida. A verificação
+     * @note O método é {@code synchronized} para evitar condições de corrida. A verificação
      *           {@code URL_queue.contains(new_URL)} é O(n); em grandes escalas recomenda-se uma
      *           estrutura auxiliar (p.ex. {@code Set}) para verificação em O(1).
      */
@@ -396,7 +396,7 @@ public class GatewayImp extends UnicastRemoteObject implements GatewayInterface{
      *
      * @param b Referência remota para um {@link StorageBarrelInterface}.
      * @return Identificador atribuído ao barrel (ex.: "Barrel1").
-     * @apiNote Após o registo, seria desejável forçar uma sincronização (snapshot) do novo barrel com um barrel activo para garantir consistência.
+     * @note Após o registo, seria desejável forçar uma sincronização (snapshot) do novo barrel com um barrel activo para garantir consistência.
      */
     @Override
     public String subscribe(StorageBarrelInterface b){

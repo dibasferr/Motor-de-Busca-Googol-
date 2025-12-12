@@ -22,7 +22,7 @@ import java.util.Set;
  * de volta ao emissor e invoca os métodos {@link MainStorageBarrel#addWordToStructure} ou
  * {@link MainStorageBarrel#addLinks} para aplicar a alteração localmente.
  *
- * @apiNote O código assume que a interface de rede está em 192.168.1.197; tornar configurável é recomendado.
+ * @note O código assume que a interface de rede está em 192.168.1.197; tornar configurável é recomendado.
  * @author Lorando Ca, Pedro Ferreira
  */
 
