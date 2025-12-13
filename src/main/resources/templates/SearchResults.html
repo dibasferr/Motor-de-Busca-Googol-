@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
 <head>
     <!-- Bootstrap CSS -->
     <link
@@ -12,26 +12,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Album Grid</title>
-
-  <link rel="stylesheet" th:href="@{/css/styles.css}" />
-  <link rel="stylesheet" th:href="@{/css/headers.css}" />
-  <link rel="stylesheet" th:href="@{/css/indexSearch.css}" />
-
+  <link rel="stylesheet" th:href="@{/css/searchResults.css}">
 </head>
 
-<body>
+<body style="background-color: rgba(0, 0, 0, 0.9);
+    border: solid rgba(255, 255, 255, 0.15);
+    border-width: 1px 0; color: white;">
 
-    <header
+    <div class="container">
+      <header
         class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom"
-        >
+      >
         <ul class="nav nav-pills">
-            <li class="nav-item"><a th:href="@{/}" class="nav-link">Home</a></li>
-            
-            <li class="nav-item"><a th:href="@{/goToSearch}" class="nav-link">Search</a></li>
-
-            <li class="nav-item"><a th:href="@{/goToSearch?wichOne=true}" class="nav-link">Index URL</a></li>
+          <li class="nav-item">
+            <a th:href="@{/}" class="nav-link" >Home</a>
+          </li>
+          <li class="nav-item"><a th:href="@{/goToSearch}" class="nav-link" aria-current="page">Search</a></li>
+          <li class="nav-item"><a th:href="@{/goToSearch?wichOne=true}" class="nav-link">Index URL</a></li> <!-- o valor 1 é usado para diferenciar se o goToSearch vai para o metodo de indexar URL ou pesquisa de palavra-->
         </ul>
-    </header>
+      </header>
+      
+    </div>
 
     <!-- Fazer Um ciclo for para iterar sobre o resultado e fazer print das 10 paginas-->
     <div class="album">
@@ -43,15 +44,9 @@
       <button id="prevBtn" class="btn btn-secondary">Anterior</button>
       <button id="nextBtn" class="btn btn-primary">Próximo</button>
     </div>
-
-    <!-- POPUP Hacker News -->
-    <script th:if="${hnIndexMessage}">
-      alert('[[${hnIndexMessage}]]');
-    </script>
-
     
-  <script th:inline="javascript">
-    let results = /*[[${resultado}]]*/ [];
+    <script th:inline="javascript">
+      let results = /*[[${resultado}]]*/ [];
   </script>
   
   <script>

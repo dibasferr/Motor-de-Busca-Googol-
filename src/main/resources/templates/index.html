@@ -39,7 +39,7 @@
       </header>
 
       <main>
-        <div class="table-container mb-5">
+        <div class="table-container mb-5 rounded-3">
             <h1>📦Barrels Disponiveis</h1>
             <table class="table table-striped styled-table">
                 <thead>
@@ -49,7 +49,7 @@
             </table>
         </div>
     
-        <div class="table-container mb-5">
+        <div class="table-container mb-5 rounded-3">
             <h1>⏱️Tempo medio de execução</h1>
             <p class="display-6 text-center" id="time-display">
                 Aguardando conexão WebSocket...
@@ -57,7 +57,7 @@
         </div>
     
     
-        <div class="table-container">
+        <div class="table-container rounded-3">
             <h1>🏆 Top 10 Pesquisas (Atualização em Tempo Real)</h1>
             
             <ol class="top-ten-list" id="top-ten-dynamic">
@@ -74,7 +74,7 @@
             function connect() {
                 stompClient = new StompJs.Client({
                     // Usando window.location.host para funcionar em diferentes ambientes
-                    brokerURL: 'ws://' + window.location.host + '/my-websocket',
+                    brokerURL: 'wss://outsourcing-serving-internal-ham.trycloudflare.com/my-websocket',
                     reconnectDelay: 5000,
                     onConnect: (frame) => {
                         console.log("Conectado ao WebSocket:", frame);

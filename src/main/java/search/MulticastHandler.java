@@ -57,8 +57,8 @@ public class MulticastHandler extends Thread {
             // Carrega o arquivo .properties
             config.load(input);
             // Lê as propriedades
-            endereço = config.getProperty("rmi.host2");//pega da sua maquina
-            porta = config.getProperty("rmi.port2");
+            endereço = config.getProperty("rmi.host1");//pega da sua maquina
+            porta = config.getProperty("rmi.port1");
         }catch(IOException e) {
             System.out.println("Erro ao carregar arquivo de configuração: " + e.getMessage());
         }
@@ -106,11 +106,11 @@ public class MulticastHandler extends Thread {
                 System.out.println("Packet Address:");
                 System.out.println(packet.getAddress());
                 
-                /*
+                
                 if (packet.getAddress().equals(InetAddress.getByName(endereço))) {//Deixar a mensagem ack vir do outro barrel
                     continue;
                 }
-                */
+                
                 byte[] dados = packet.getData();
                 int length = packet.getLength();
                 //Enviar ACK 

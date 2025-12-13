@@ -52,6 +52,7 @@ public class GatewayConfig {
 
 		
 		//gateway interface setup
+		System.setProperty("java.rmi.server.hostname", "172.20.10.2");
 		try {
 			GatewayInterface stub = (GatewayInterface)Naming.lookup( String.format("rmi://%s:%s/Gateway",endereço_gateway,porta));
 			return stub;

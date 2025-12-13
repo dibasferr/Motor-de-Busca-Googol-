@@ -89,3 +89,30 @@
     display: block !important;
     color: #ffffff;
 }
+
+/* No seu ficheiro CSS (ex: styles.css) */
+
+/* 1. Estilo para o placeholder de Tempo Médio de Execução */
+#time-display {
+    /* Define a fonte que deseja, com fallbacks seguros */
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    
+    /* Propriedades visuais sugeridas (opcional) */
+    font-weight: 300; /* Mais leve, moderno */
+    color: #ffcc66;  /* Cor de destaque para indicar um estado */
+}
+
+/* 2. Estilo para o placeholder da Lista Top 10 */
+#top-ten-dynamic .search-term {
+    /* Usa a mesma fonte ou a fonte principal do body para consistência */
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    
+    /* Propriedades visuais sugeridas (opcional) */
+    font-style: italic; /* Para indicar que é um estado temporário */
+    color: #999999; /* Cinzento para indicar placeholder/estado não finalizado */
+}
+
+/* 3. Se ainda não o fez, defina a fonte base para o resto do texto */
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}

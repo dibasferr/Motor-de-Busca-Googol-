@@ -21,34 +21,47 @@ public class chatCompletion implements chatCompletionInterface {
      * @return resposta gerada pelo modelo; null caso ocorra algum erro
 	 * @author Lorando Ca, Pedro Ferreira
      */
+
+	private final Ollama ollama;
+    private static final String MODEL = "phi3:mini";
+
+// 1. Mova a inicialização e o pullModel para o construtor
+    public chatCompletion() {
+        try {
+            this.ollama = new Ollama("http://localhost:11434/");
+            this.ollama.setRequestTimeoutSeconds(120);
+
+            // Tentar descarregar o modelo APENAS uma vez na inicialização da aplicação
+            System.out.println("A verificar e a descarregar o modelo Ollama: " + MODEL);
+            this.ollama.pullModel(MODEL);
+            System.out.println("Modelo Ollama pronto.");
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao iniciar a conexão Ollama.", e);
+        }
+    }
+
     @Override
-    //Para a implementacao do chat completion, foram usadas as informações disponíveis nesta pagina oficial : https://ollama4j.github.io/ollama4j/apis-generate/chat
-	public String Completion(String wordToLook){
-		try{
-			Ollama ollama = new Ollama("http://localhost:11434/");
-			ollama.setRequestTimeoutSeconds(120);
-			
-			String model = "mistral:7b";
-			ollama.pullModel(model);
+    public String Completion(String wordToLook){
+        try{
+            // O objeto ollama já está inicializado
+            
+            OllamaChatRequest builder = OllamaChatRequest.builder().withModel(MODEL);
 
-			OllamaChatRequest builder = OllamaChatRequest.builder().withModel(model);
+            OllamaChatRequest requestModel =
+                builder.withMessage(OllamaChatMessageRole.USER, wordToLook)
+                        .build();
 
-			// create first user question
-			OllamaChatRequest requestModel =
-					builder.withMessage(OllamaChatMessageRole.USER, wordToLook)
- 
-							.build();
+            // Faça a chamada API
+            OllamaChatResult chatResult = this.ollama.chat(requestModel, null);
 
-			// start conversation with model
-			OllamaChatResult chatResult = ollama.chat(requestModel, null); // http://localhost:11434/api/chat
+            return chatResult.getResponseModel().getMessage().getResponse();
 
-			return  chatResult.getResponseModel().getMessage().getResponse();
-
-		}catch(Exception e){
-			System.out.println("Erro ao comunicar com o Ollama server");
-			e.printStackTrace();
-		}
-        return null;
+        }catch(Exception e){
+            System.out.println("Erro ao comunicar com o Ollama server durante a chat completion.");
+            e.printStackTrace();
+            return null;
+        }
     }
     
 }

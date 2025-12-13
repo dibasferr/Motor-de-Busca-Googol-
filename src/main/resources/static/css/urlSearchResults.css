@@ -1,97 +1,54 @@
-.bd-placeholder-img {
-    font-size: 1.125rem;
-    text-anchor: middle;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-}
-
-@media (min-width: 768px) {
-    .bd-placeholder-img-lg {
-        font-size: 3.5rem;
-    }
-}
-
-/* Divider / Separadores */
-.b-example-divider {
-    width: 100%;
-    height: 3rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: solid rgba(255, 255, 255, 0.15);
-    border-width: 1px 0;
-    box-shadow:
-        inset 0 0.5em 1.5em rgba(255, 255, 255, 0.1),
-        inset 0 0.125em 0.5em rgba(255, 255, 255, 0.15);
-}
-
-/* Vertical rule */
-.b-example-vr {
-    flex-shrink: 0;
-    width: 1.5rem;
-    height: 100vh;
-}
-
-/* Icons */
-.bi {
-    vertical-align: -0.125em;
-    fill: currentColor;
-    color: #ffffff; /* ícones visíveis em dark mode */
-}
-
-/* Navbar Scroller */
-.nav-scroller {
-    position: relative;
-    z-index: 2;
-    height: 2.75rem;
-    overflow-y: hidden;
-}
-
-.nav-scroller .nav {
-    display: flex;
-    flex-wrap: nowrap;
-    padding-bottom: 1rem;
-    margin-top: -1px;
-    overflow-x: auto;
-    text-align: center;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Botões primários */
-.btn-bd-primary {
-    --bd-violet-bg: #712cf9;
-    --bd-violet-rgb: 112.520718, 44.062154, 249.437846;
-    --bs-btn-font-weight: 600;
-    --bs-btn-color: var(--bs-white);
-    --bs-btn-bg: #333333;              /* fundo escuro */
-    --bs-btn-border-color: #555555;     /* borda visível */
-    --bs-btn-hover-color: #ffffff;
-    --bs-btn-hover-bg: #555555;         /* hover mais claro */
-    --bs-btn-hover-border-color: #777777;
-    --bs-btn-focus-shadow-rgb: 112,44,249;
-    --bs-btn-active-color: #ffffff;
-    --bs-btn-active-bg: #444444;
-    --bs-btn-active-border-color: #444444;
-}
-
-/* Toggle Mode */
-.bd-mode-toggle {
-    z-index: 1500;
-}
-
-.bd-mode-toggle .bi {
-    width: 1em;
-    height: 1em;
-    color: #ffffff;
-}
-
-.bd-mode-toggle .dropdown-menu .active .bi {
-    display: block !important;
-    color: #ffffff;
-}
-
-/* --- Corpo da página --- */
+/* Definições de Cores e Fundo (assumindo um tema escuro) */
 body {
-    background-color: #121212;
-    color: #e0e0e0;
+    background-color: #121212; /* Fundo escuro */
+    color: #e0e0e0; /* Cor de texto padrão clara */
+    font-family: Arial, sans-serif;
+    padding-top: 20px;
+}
+
+/* Container Principal dos Resultados */
+.search-results-container {
+    max-width: 800px; /* Limita a largura para melhor legibilidade em desktops */
+    margin: 0 auto; /* Centra o container */
+    padding: 0 15px;
+}
+
+/* Título Geral */
+.search-results-container h3 {
+    color: #ffffff; /* Branco puro para o título principal */
+    margin-bottom: 30px;
+    border-bottom: 1px solid #333333; /* Separador subtil */
+    padding-bottom: 10px;
+}
+
+/* Item de Resultado Individual */
+.result-item {
+    margin-bottom: 30px; /* Espaço entre cada resultado */
+    padding: 10px 0;
+}
+
+/* Título do Resultado (o link) */
+.result-title {
+    font-size: 1.35rem; /* Um pouco maior que o padrão */
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.result-title a {
+    color: #8ab4f8; /* Azul claro (como um link de pesquisa) */
+    text-decoration: none; /* Remove sublinhado por defeito */
+    transition: color 0.2s;
+}
+
+.result-title a:hover {
+    color: #c5d8ff; /* Fica mais claro ao passar o rato */
+    text-decoration: underline; /* Adiciona sublinhado ao passar o rato */
+}
+
+/* URL do Resultado */
+.result-url {
+    display: block; /* Garante que o URL está numa nova linha */
+    font-size: 0.9rem;
+    color: #a5d6a7; /* Verde suave para representar o caminho/URL (pode usar #9aa0a6 cinza se preferir) */
+    word-wrap: break-word; /* Evita quebra de layout em URLs muito longos */
 }
