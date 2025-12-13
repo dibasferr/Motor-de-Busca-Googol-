@@ -74,7 +74,7 @@
             function connect() {
                 stompClient = new StompJs.Client({
                     // Usando window.location.host para funcionar em diferentes ambientes
-                    brokerURL: 'wss://outsourcing-serving-internal-ham.trycloudflare.com/my-websocket',
+                    brokerURL: 'ws://' + window.location.host + '/my-websocket',
                     reconnectDelay: 5000,
                     onConnect: (frame) => {
                         console.log("Conectado ao WebSocket:", frame);

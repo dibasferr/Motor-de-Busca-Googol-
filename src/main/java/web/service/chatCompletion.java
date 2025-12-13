@@ -23,7 +23,7 @@ public class chatCompletion implements chatCompletionInterface {
      */
 
 	private final Ollama ollama;
-    private static final String MODEL = "phi3:mini";
+    private static final String MODEL = "tinyllama";
 
 // 1. Mova a inicialização e o pullModel para o construtor
     public chatCompletion() {
